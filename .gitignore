@@ -1,6 +1,6 @@
 # Keep the repository to the published files only
 *
 !.gitignore
-!cdfy.js
+!cd-fy.js
 !manifest.json
 !LICENSE

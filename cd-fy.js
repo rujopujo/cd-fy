@@ -1,9 +1,9 @@
-// cdfy.js - Spicetify extension: cdfy
+// cd-fy.js - Spicetify extension: cd-fy
 // Spins the cover of the playlist that is CURRENTLY PLAYING like a vinyl record,
 // with needle wobble / warping and interactive DJ vinyl scratching.
 //
 // Settings live in the Spotify profile menu (your avatar, top right):
-//   Profile menu > cdfy
+//   Profile menu > cd-fy
 // Shortcuts:  Ctrl+Alt+Up = next faster speed,  Ctrl+Alt+Down = next slower speed
 // Scratch:    Click and drag the spinning header record to scratch (this moves
 //             the song's playback position), with a press-down spring while held
@@ -70,12 +70,12 @@
   ].join(", ");
 
   // ------------------------------ settings ---------------------------------
-  const KEY = "cdfy:settings";
+  const KEY = "cd-fy:settings";
   function load() {
     try {
       const get = (k) => (Spicetify.LocalStorage && Spicetify.LocalStorage.get(k)) || localStorage.getItem(k);
-      // settings saved under the extension's old name ("disc-spin") carry over
-      const raw = get(KEY) || get("disc-spin:settings");
+      // settings saved under the extension's old names ("cdfy", "disc-spin") carry over
+      const raw = get(KEY) || get("cdfy:settings") || get("disc-spin:settings");
       return Object.assign({}, DEFAULTS, raw ? JSON.parse(raw) : {});
     } catch (e) {
       return Object.assign({}, DEFAULTS);
@@ -100,12 +100,12 @@
     try {
       if (!hudEl || !hudEl.isConnected) {
         hudEl = document.createElement("div");
-        hudEl.id = "cdfy-hud";
+        hudEl.id = "cd-fy-hud";
         hudEl.innerHTML = '<span class="hud-dot"></span><span class="hud-text"></span>';
         document.body.appendChild(hudEl);
       }
       hudEl.classList.toggle("off", /disabled| off$/.test(msg));
-      hudEl.querySelector(".hud-text").textContent = msg.replace(/^cdfy\s*:\s*/, "");
+      hudEl.querySelector(".hud-text").textContent = msg.replace(/^cd-fy\s*:\s*/, "");
       hudEl.classList.add("show");
       clearTimeout(hudTimer);
       hudTimer = setTimeout(() => hudEl && hudEl.classList.remove("show"), 1800);
@@ -116,14 +116,14 @@
 
   // ------------------------------- styling ---------------------------------
   // Header-wide styling only applies while the header record is in use (body
-  // class "cdfy-header", set in tick): on a playlist page with the record
+  // class "cd-fy-header", set in tick): on a playlist page with the record
   // spinning, or with hover tilt / click wave on. Album, artist and podcast
   // headers, and playlist headers with those features off, are left as Spotify
   // draws them.
   const scoped = (sel) =>
     sel
       .split(",")
-      .map((s) => "body.cdfy-header " + s.trim())
+      .map((s) => "body.cd-fy-header " + s.trim())
       .join(", ");
   const style = document.createElement("style");
   style.textContent = `
@@ -165,7 +165,7 @@
       transition: color 0.15s ease, font-weight 0.15s ease;
     }
     /* Floating status pill (replaces the plain toasts) */
-    #cdfy-hud {
+    #cd-fy-hud {
       position: fixed;
       right: 24px;
       bottom: 104px;
@@ -188,11 +188,11 @@
       transform: translateY(12px) scale(0.96);
       transition: opacity 0.25s ease, transform 0.25s ease;
     }
-    #cdfy-hud.show {
+    #cd-fy-hud.show {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
-    #cdfy-hud .hud-dot {
+    #cd-fy-hud .hud-dot {
       width: 10px;
       height: 10px;
       border-radius: 50%;
@@ -200,18 +200,18 @@
       box-shadow: 0 0 8px #1ed760;
       flex: none;
     }
-    #cdfy-hud.off .hud-dot {
+    #cd-fy-hud.off .hud-dot {
       background: #6a6a6a;
       box-shadow: none;
     }
-    #cdfy-hud .hud-sub {
+    #cd-fy-hud .hud-sub {
       color: rgba(255, 255, 255, 0.6);
       font-weight: 500;
     }
     /* Click wave: the canvas that stands in for the record while it ripples */
     /* Nothing from the page may paint it (Spotify styles the header's children with a grey fill),
        and it is trimmed to the disc's own circle, so nothing outside the disc can ever show. */
-    #cdfy-wave {
+    #cd-fy-wave {
       position: absolute !important;
       margin: 0 !important;
       padding: 0 !important;
@@ -273,7 +273,7 @@
 
   // ---------------------------- find elements ------------------------------
   // Never the extension's own elements (the click-wave layer lives inside the header).
-  const ownEl = (el) => !!(el.closest && el.closest("#cdfy-wave"));
+  const ownEl = (el) => !!(el.closest && el.closest("#cd-fy-wave"));
   function headerEls() {
     const imgs = Array.from(document.querySelectorAll(HEADER_IMG_SEL)).filter((el) => !ownEl(el));
     if (imgs.length) return imgs;
@@ -552,7 +552,7 @@
         scratchSource.start(0);
       }
     } catch (e) {
-      console.warn("[cdfy] scratch audio error", e);
+      console.warn("[cd-fy] scratch audio error", e);
     }
   }
 
@@ -1017,7 +1017,7 @@
   };
 
   const waveAllowed = () => S.enabled && S.wave && isPlaylistPage();
-  const waveLog = (why) => console.info("[cdfy] click wave not started:", why);
+  const waveLog = (why) => console.info("[cd-fy] click wave not started:", why);
 
   // ---- where the disc ends inside the cover picture -------------------------
   // Fraction of the cover's radius that is actually record (1 = all of it).
@@ -1036,7 +1036,7 @@
         vinylEdge.set(src, measureVinyl(im));
         headerEls().forEach(vinylFit);
       } catch (e) {
-        console.info("[cdfy] couldn't read the cover to find the disc's edge; showing the whole cover");
+        console.info("[cd-fy] couldn't read the cover to find the disc's edge; showing the whole cover");
       }
     };
     im.src = src;
@@ -1178,7 +1178,7 @@
     }
     wave.parent = parent;
     const cv = document.createElement("canvas");
-    cv.id = "cdfy-wave";
+    cv.id = "cd-fy-wave";
     cv.style.visibility = "hidden"; // shown on the first frame, together with hiding the record
     wave.canvas = cv;
     wave.ctx = cv.getContext("2d");
@@ -1458,7 +1458,7 @@
     if (e.button !== 0) return;
     const el = tiltTarget(e.target);
     if (!el) return; // not the header record: nothing to say
-    if (!waveAllowed()) return waveLog(!S.wave ? "turned off in the menu" : !S.enabled ? "cdfy is disabled" : "not a playlist page");
+    if (!waveAllowed()) return waveLog(!S.wave ? "turned off in the menu" : !S.enabled ? "cd-fy is disabled" : "not a playlist page");
     if (el.tagName !== "IMG") return waveLog("the header record is not an <img> (" + el.tagName + ")");
     detectVinyl(el);
     const src = el.currentSrc || el.src;
@@ -1504,7 +1504,7 @@
     const inUse = S.enabled && onPlaylist && (S.tilt || S.wave || hdr.some((el) => running.has(el)));
     if (inUse !== headerInUse) {
       headerInUse = inUse;
-      document.body.classList.toggle("cdfy-header", inUse);
+      document.body.classList.toggle("cd-fy-header", inUse);
     }
     if (inUse) hdr.forEach(detectVinyl);
     else hdr.forEach(vinylUnfit);
@@ -1568,7 +1568,7 @@
   function getMenuDef() {
     return {
       enabled: {
-        text: S.enabled ? "disable cdfy." : "enable cdfy.",
+        text: S.enabled ? "disable cd-fy." : "enable cd-fy.",
         active: S.enabled,
         isTitle: false,
       },
@@ -1745,18 +1745,18 @@
     S.rpm = v;
     save();
     refreshMenu();
-    if (announce) toast(`cdfy : ${fmtRpm(S.rpm)} rpm`);
+    if (announce) toast(`cd-fy : ${fmtRpm(S.rpm)} rpm`);
   }
 
   function stepRpm(delta) {
     const i = RPM_PRESETS.indexOf(S.rpm);
     const j = Math.min(RPM_PRESETS.length - 1, Math.max(0, i + delta));
     if (j !== i) setRpm(RPM_PRESETS[j], true);
-    else toast(`cdfy : ${fmtRpm(S.rpm)} rpm (${delta > 0 ? "max" : "min"})`);
+    else toast(`cd-fy : ${fmtRpm(S.rpm)} rpm (${delta > 0 ? "max" : "min"})`);
   }
 
   const TOAST_NAMES = {
-    enabled: "cdfy",
+    enabled: "cd-fy",
     smooth: "smooth ramp",
     home: "return to start",
     wobble: "needle wobble",
@@ -1777,9 +1777,9 @@
     if ((key === "wave" || key === "enabled") && !S[key]) waveEnd();
     const label = TOAST_NAMES[key] || key;
     if (key === "enabled") {
-      toast(`cdfy : ${S.enabled ? "enabled" : "disabled"}`);
+      toast(`cd-fy : ${S.enabled ? "enabled" : "disabled"}`);
     } else {
-      toast(`cdfy : ${label} ${S[key] ? "on" : "off"}`);
+      toast(`cd-fy : ${label} ${S[key] ? "on" : "off"}`);
     }
   }
 
@@ -1799,7 +1799,7 @@
           S.dir = -S.dir;
           save();
           refreshMenu();
-          toast(`cdfy : direction ${S.dir > 0 ? "clockwise" : "counter-clockwise"}`);
+          toast(`cd-fy : direction ${S.dir > 0 ? "clockwise" : "counter-clockwise"}`);
         }),
         mk("smooth",        () => toggle("smooth")),
         mk("home",          () => toggle("home")),
@@ -1818,13 +1818,13 @@
           tick(true);
           tiltSettle();
           waveEnd();
-          toast("cdfy : settings reset");
+          toast("cd-fy : settings reset");
         }),
       ];
-      new Spicetify.Menu.SubMenu("cdfy", list).register();
+      new Spicetify.Menu.SubMenu("cd-fy", list).register();
     }
   } catch (e) {
-    console.warn("[cdfy] menu unavailable", e);
+    console.warn("[cd-fy] menu unavailable", e);
   }
 
   // DOM observer to apply styles whenever menus open

@@ -1,6 +1,6 @@
 {
-  "name": "cdfy",
+  "name": "cd-fy",
   "description": "Spins the playing playlist's cover like a vinyl record, with scratching, a hover tilt and a click ripple.",
-  "main": "cdfy.js",
+  "main": "cd-fy.js",
   "tags": ["vinyl", "record", "animation", "playlist"]
 }
