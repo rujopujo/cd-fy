@@ -1,0 +1,7 @@
+# Keep the repository to the published files only
+*
+!.gitignore
+!cdfy.js
+!manifest.json
+!LICENSE
+!preview.png
