@@ -42,6 +42,8 @@
     fx: true,
     tilt: true,
     wave: true,
+    platform: true,
+    fits: {}, // CD fit set by hand, per playlist (fraction of the picture that is record)
   };
   const RPM_PRESETS = [10, 30, 50];
   // -------------------------------------------------------------------------
@@ -154,11 +156,14 @@
       -webkit-backface-visibility: hidden !important;
       transform-style: preserve-3d !important;
       clip-path: circle(50% at 50% 50%) !important;
-      cursor: grab !important;
       user-select: none !important;
       -webkit-user-drag: none !important;
     }
-    .disc-round:active {
+    /* A spinning CD can be scratched: say so with the cursor */
+    .disc-round.disc-live {
+      cursor: grab !important;
+    }
+    .disc-round.disc-live:active {
       cursor: grabbing !important;
     }
     .main-contextMenu-menuItemButton span {
@@ -229,6 +234,83 @@
       transform-origin: center center !important;
       clip-path: circle(var(--ds-disc, 50%) at 50% 50%) !important;
     }
+    /* On the platform, the CD is round even while it rests (a vinyl's own trim, set inline, still wins) */
+    .cdfy-round {
+      border-radius: 50% !important;
+      clip-path: circle(50% at 50% 50%);
+    }
+    /* Platform and CD shadow: our own layers in the picture's box; neither takes a click */
+    .cdfy-layer {
+      position: absolute !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      outline: 0 !important;
+      max-width: none !important;
+      max-height: none !important;
+      right: auto !important;
+      bottom: auto !important;
+      pointer-events: none !important;
+      border-radius: 50% !important;
+      box-sizing: border-box !important;
+    }
+    /* The platform: three stacked black metal plates whose bare stainless-steel edges
+       step out from the CD's own edge, like the bezel round a DJ deck's jog wheel */
+    #cd-fy-platform {
+      z-index: 0;
+      background: transparent !important;
+    }
+    #cd-fy-platform .cdfy-plate {
+      position: absolute;
+      border-radius: 50%;
+      /* brushed stainless: brightest along the line to the light (upper left, lower right) */
+      background: conic-gradient(
+        from 0deg,
+        #8d9198 0deg,
+        #d5d8dc 30deg,
+        #878b92 72deg,
+        #b8bbc0 108deg,
+        #f4f5f7 135deg,
+        #9a9ea5 165deg,
+        #6a6e75 210deg,
+        #a8acb2 250deg,
+        #f6f7f8 315deg,
+        #b4b7bc 343deg,
+        #8d9198 360deg
+      );
+      /* a hairline where each plate meets the one below, and a bevel lit from the upper left */
+      box-shadow:
+        0 0 0 0.6px rgba(0, 0, 0, 0.85),
+        0 1px 2px rgba(0, 0, 0, 0.6),
+        inset 0.8px 0.8px 0.8px rgba(255, 255, 255, 0.45),
+        inset -0.8px -0.8px 0.8px rgba(0, 0, 0, 0.4);
+    }
+    /* deeper plates sit in shadow, the top one catches the most light */
+    #cd-fy-platform .cdfy-plate-1 {
+      filter: brightness(0.72);
+      box-shadow:
+        0 0 0 0.6px rgba(0, 0, 0, 0.9),
+        0 8px 20px rgba(0, 0, 0, 0.55),
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        inset 0.8px 0.8px 0.8px rgba(255, 255, 255, 0.35);
+    }
+    #cd-fy-platform .cdfy-plate-2 {
+      filter: brightness(0.86);
+    }
+    /* Each plate's black face lies under the plate (or the CD) above it, so only steel shows
+       between the CD and the outside: it only shows through a see-through part of a CD. */
+    #cd-fy-platform .cdfy-face {
+      position: absolute;
+      border-radius: 50%;
+      background: #0c0c0d;
+    }
+    /* The CD's own shadow on the platform */
+    #cd-fy-cdshadow {
+      z-index: 1;
+      background: #000 !important;
+      opacity: 0.7;
+      will-change: transform, filter, opacity;
+    }
   `;
   document.head.appendChild(style);
 
@@ -289,6 +371,8 @@
   function pageCovers(id) {
     const out = [];
     document.querySelectorAll(`a[href*="${id}"] img`).forEach((img) => {
+      // The sidebar has its own setting, and the header is the record itself, so neither counts as a shelf.
+      if (img.closest(SIDEBAR_SEL) || img.closest(HEADER_WRAP_SEL) || ownEl(img)) return;
       const a = img.closest("a");
       if (a && a.querySelectorAll("img").length === 1) out.push(img);
     });
@@ -315,29 +399,39 @@
   function applyAngle(el, s) {
     const sc = s.scale !== undefined && s.scale !== 1 ? ` scale(${s.scale.toFixed(4)})` : "";
     const pre = tiltPrefix(el); // hover tilt goes in front of the spin
-    if (S.wobble) {
-      // 3D vinyl warp & needle wobble: orbital tilt tracking the rotation angle
+    // Warp & needle wobble: an orbital tilt that follows the rotation. Its size
+    // follows the speed (smoothed), so it fades in as the record spins up and
+    // out as it slows, and a record coming to rest never snaps flat.
+    const want = S.wobble ? Math.min(1, Math.abs(s.omega || 0) / Math.max(1, Math.abs(fullSpeed()))) : 0;
+    s.wob = s.wob === undefined ? want : s.wob + (want - s.wob) * 0.12;
+    if (s.wob < 0.002) s.wob = 0;
+    if (s.wob > 0) {
       const rad = (s.angle * Math.PI) / 180;
-      const tiltX = (Math.sin(rad) * 1.5).toFixed(2);
-      const tiltY = (Math.cos(rad) * 1.5).toFixed(2);
-      const shiftZ = (Math.sin(rad * 2) * 0.4).toFixed(2);
+      const tiltX = (Math.sin(rad) * 1.5 * s.wob).toFixed(2);
+      const tiltY = (Math.cos(rad) * 1.5 * s.wob).toFixed(2);
+      const shiftZ = (Math.sin(rad * 2) * 0.4 * s.wob).toFixed(2);
       el.style.transform = `${pre}rotate3d(0, 0, 1, ${s.angle.toFixed(2)}deg) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateZ(${shiftZ}px)${sc}`;
     } else {
       el.style.transform = `${pre}rotate3d(0, 0, 1, ${s.angle.toFixed(2)}deg) translateZ(0)${sc}`;
     }
+    sheenFollow(el); // the CD's shadow follows its lift and press-down
   }
 
   function settleIdle(el, s, atHome) {
     s.mode = "idle";
     s.omega = 0;
+    s.wob = 0;
     el.classList.remove("disc-live");
     if (atHome) {
       s.angle = 0;
       el.style.transform = tiltPrefix(el).trim();
+      sheenFollow(el);
       if (!isHeader(el)) el.classList.remove("disc-round");
     } else {
       applyAngle(el, s);
     }
+    // Came to rest under a cursor that's already on it: lift it without waiting for the mouse to move.
+    if (isHeader(el) && lastPtr) setTimeout(() => lastPtr && tiltPointer(lastPtr.x, lastPtr.y, lastPtr.target), 0);
   }
 
   function step(el, s, dt, now) {
@@ -463,6 +557,8 @@
     running.add(el);
     live.add(el);
     kick();
+    // A lifted CD drops back onto its platform the moment it starts to spin.
+    if (tilt.el === el && tilt.th > 0) tiltSettle();
   }
 
   function stop(el) {
@@ -823,12 +919,19 @@
   // the record's own circular clip bends with it and nothing else moves.
   const TILT_MAX = 22; // degrees at the rim
   const TILT_PERSPECTIVE = 650; // px: smaller bends harder
-  const TILT_LIFT = 0.035; // grows a touch while hovered
+  const TILT_LIFT = 0.045; // lifts off the platform toward you while hovered
   const TILT_RATE = 14; // 1/s: how fast the lean follows the cursor
-  const tilt = { el: null, rx: 0, ry: 0, h: 0, trx: 0, try_: 0, th: 0, raf: 0, last: 0 };
+  const tilt = { el: null, rx: 0, ry: 0, h: 0, hv: 0, trx: 0, try_: 0, th: 0, raf: 0, last: 0 };
 
   const isPlaylistPage = () => /^\/playlist\//.test(currentPath());
-  const tiltAllowed = () => S.enabled && S.tilt && isPlaylistPage();
+  // The header CD is turning (playing, or still coasting to a stop).
+  const headerSpinning = () =>
+    headerEls().some((el) => {
+      const s = states.get(el);
+      return !!s && s.mode !== "idle";
+    });
+  // Lifting and bending only while the CD is still: a spinning CD stays down on its platform, for scratching.
+  const tiltAllowed = () => S.enabled && S.tilt && isPlaylistPage() && !headerSpinning();
 
   // The record's flat circle on screen, from its layout box placed by its
   // parent's rect, so neither the spin nor the tilt can skew the measurement.
@@ -846,7 +949,7 @@
     return { cx: left + w / 2, cy: top + h / 2, r: Math.min(w, h) / 2 || 1 };
   }
 
-  const tiltOn = (el) => el === tilt.el && !(tilt.h < 0.002 && Math.abs(tilt.rx) < 0.01 && Math.abs(tilt.ry) < 0.01);
+  const tiltOn = (el) => el === tilt.el && !(Math.abs(tilt.h) < 0.002 && Math.abs(tilt.rx) < 0.01 && Math.abs(tilt.ry) < 0.01);
 
   // The tilt part of the record's transform; empty when it isn't tilted.
   function tiltPrefix(el) {
@@ -858,7 +961,10 @@
   function tiltWriteRecord(el) {
     const s = states.get(el);
     if (s && !(s.mode === "idle" && s.angle === 0)) applyAngle(el, s);
-    else el.style.transform = tiltPrefix(el).trim();
+    else {
+      el.style.transform = tiltPrefix(el).trim();
+      sheenFollow(el);
+    }
   }
 
   function tiltTarget(target) {
@@ -888,7 +994,7 @@
     if (tilt.el === el) return;
     tiltRelease();
     tilt.el = el;
-    tilt.rx = tilt.ry = tilt.h = 0;
+    tilt.rx = tilt.ry = tilt.h = tilt.hv = 0;
     detectVinyl(el); // find where the disc ends in the cover before the first click
   }
 
@@ -951,10 +1057,13 @@
     const f = 1 - Math.exp(-TILT_RATE * dt);
     tilt.rx += (tilt.trx - tilt.rx) * f;
     tilt.ry += (tilt.try_ - tilt.ry) * f;
-    tilt.h += (tilt.th - tilt.h) * (1 - Math.exp(-9 * dt));
+    // Lift and landing on a spring: it rises with a soft float and settles onto
+    // the platform with a small bump.
+    tilt.hv += (170 * (tilt.th - tilt.h) - 15 * tilt.hv) * dt;
+    tilt.h += tilt.hv * dt;
 
-    if (tilt.th === 0 && Math.abs(tilt.rx) < 0.02 && Math.abs(tilt.ry) < 0.02 && tilt.h < 0.005) {
-      tilt.rx = tilt.ry = tilt.h = 0;
+    if (tilt.th === 0 && Math.abs(tilt.rx) < 0.02 && Math.abs(tilt.ry) < 0.02 && Math.abs(tilt.h) < 0.003 && Math.abs(tilt.hv) < 0.02) {
+      tilt.rx = tilt.ry = tilt.h = tilt.hv = 0;
       if (!wave.active) tiltRelease();
       else tiltWriteRecord(el);
       tilt.raf = 0;
@@ -966,13 +1075,26 @@
     const converged =
       Math.abs(tilt.trx - tilt.rx) < 0.01 &&
       Math.abs(tilt.try_ - tilt.ry) < 0.01 &&
-      Math.abs(tilt.th - tilt.h) < 0.002;
+      Math.abs(tilt.th - tilt.h) < 0.002 &&
+      Math.abs(tilt.hv) < 0.01;
     tilt.raf = converged ? 0 : requestAnimationFrame(tiltFrame);
   }
 
-  document.addEventListener("mousemove", (e) => tiltPointer(e.clientX, e.clientY, e.target), { passive: true });
+  // Where the cursor last was, so a CD that stops spinning under it can lift straight away.
+  let lastPtr = null;
+  document.addEventListener(
+    "mousemove",
+    (e) => {
+      lastPtr = { x: e.clientX, y: e.clientY, target: e.target };
+      tiltPointer(e.clientX, e.clientY, e.target);
+    },
+    { passive: true }
+  );
   window.addEventListener("mouseout", (e) => {
-    if (!e.relatedTarget) tiltSettle();
+    if (!e.relatedTarget) {
+      lastPtr = null;
+      tiltSettle();
+    }
   });
   window.addEventListener("blur", tiltSettle);
 
@@ -1012,16 +1134,20 @@
   const wave = {
     el: null, active: false, drops: [], raf: 0,
     canvas: null, ctx: null, shadeCv: null, shadeCtx: null, shadeImg: null, layer: null,
-    w: 0, h: 0, rv: 1, src: "", peak: 0,
+    w: 0, h: 0, rv: 1, zoom: 1, src: "", peak: 0,
     parent: null, parentPos: false, masked: false,
   };
 
-  const waveAllowed = () => S.enabled && S.wave && isPlaylistPage();
+  // Not while the CD is spinning: then it's for scratching.
+  const waveAllowed = () => S.enabled && S.wave && isPlaylistPage() && !headerSpinning();
   const waveLog = (why) => console.info("[cd-fy] click wave not started:", why);
 
   // ---- where the disc ends inside the cover picture -------------------------
   // Fraction of the cover's radius that is actually record (1 = all of it).
   const vinylEdge = new Map();
+  // What happened when each cover was measured, for cdfyDebug().
+  const vinylWhy = new Map();
+  let measureWhy = "";
 
   function detectVinyl(el) {
     if (!el || el.tagName !== "IMG") return;
@@ -1029,26 +1155,57 @@
     if (!src) return;
     if (vinylEdge.has(src)) return vinylFit(el);
     vinylEdge.set(src, 1); // until measured: the whole cover
+    vinylWhy.set(src, "measuring");
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.onload = () => {
       try {
         vinylEdge.set(src, measureVinyl(im));
+        vinylWhy.set(src, measureWhy);
         headerEls().forEach(vinylFit);
       } catch (e) {
+        vinylWhy.set(src, "Spotify didn't let the extension read this picture's pixels");
         console.info("[cd-fy] couldn't read the cover to find the disc's edge; showing the whole cover");
       }
+    };
+    im.onerror = () => {
+      vinylWhy.set(src, "the picture couldn't be loaded for measuring");
+      console.info("[cd-fy] couldn't load the cover to find the disc's edge; showing the whole cover");
     };
     im.src = src;
   }
 
-  // Trim the header record to the disc in its picture, so the background the
-  // disc was drawn on (a grey or coloured ring, or a transparent one showing
-  // the page behind) never shows around it.
+  // A cover that is a picture of a record on a background is zoomed in to the
+  // record, so the CD keeps exactly the size of the playlist picture and no
+  // background ring shows around it. (Where the browser can't zoom a picture,
+  // the record is trimmed to the disc instead.)
+  const ZOOM_OK = !!(window.CSS && CSS.supports && CSS.supports("object-view-box", "inset(10%)"));
+  const edgeOf = (src) => vinylEdge.get(src) || 1;
+  // How much of the shown record's radius is disc: all of it once the picture is zoomed to the disc.
+  // The fit set by hand for this playlist (Ctrl + mouse wheel over the CD), else the default:
+  // every CD starts zoomed in to 120%, so the record fills the platform.
+  const DEFAULT_ZOOM = 1.2;
+  const fitKey = () => (currentPath().match(/^\/playlist\/([A-Za-z0-9]+)/) || [])[1] || "";
+  const fitFor = (src) => {
+    const k = fitKey();
+    return (k && S.fits && S.fits[k]) || 1 / DEFAULT_ZOOM;
+  };
+  const discFrac = (src) => (ZOOM_OK ? 1 : fitFor(src));
+  // How far the picture is zoomed in so the disc fills it.
+  const zoomOf = (src) => (ZOOM_OK ? fitFor(src) : 1);
+
   function vinylFit(el) {
     if (!el || el.tagName !== "IMG") return;
     const src = el.currentSrc || el.src;
-    const rv = vinylEdge.get(src) || 1;
+    const rv = fitFor(src);
+    if (ZOOM_OK) {
+      const view = rv < 1 ? `inset(${((1 - rv) * 50).toFixed(3)}%)` : "";
+      if (el.dataset.discClip === view) return;
+      if (view) el.style.setProperty("object-view-box", view, "important");
+      else el.style.removeProperty("object-view-box");
+      el.dataset.discClip = view;
+      return;
+    }
     const want = rv < 1 ? `circle(${(rv * 50).toFixed(3)}% at 50% 50%)` : "";
     if (el.dataset.discClip === want) return;
     if (want) el.style.setProperty("clip-path", want, "important");
@@ -1059,11 +1216,42 @@
   function vinylUnfit(el) {
     if (!el || !el.dataset || !el.dataset.discClip) return;
     el.style.removeProperty("clip-path");
+    el.style.removeProperty("object-view-box");
     el.dataset.discClip = "";
   }
+  // Fit the CD by hand: Ctrl + mouse wheel over the header CD zooms its picture
+  // in or out, so the record fills the platform exactly even on a cover whose
+  // edge can't be found automatically. Remembered for each playlist.
+  window.addEventListener(
+    "wheel",
+    (e) => {
+      if (!e.ctrlKey || !S.enabled || !isPlaylistPage()) return;
+      const el = tiltTarget(e.target);
+      if (!el || el.tagName !== "IMG") return;
+      if (tiltMeasure(el, e.clientX, e.clientY).d > 1) return;
+      const k = fitKey();
+      if (!k) return;
+      e.preventDefault(); // not Spotify's own page zoom
+      e.stopPropagation();
+      const src = el.currentSrc || el.src;
+      const step = e.deltaY > 0 ? 0.01 : -0.01; // wheel up: zoom in
+      const next = Math.round(Math.min(1, Math.max(0.5, fitFor(src) + step)) * 1000) / 1000;
+      S.fits = Object.assign({}, S.fits, { [k]: next });
+      save();
+      // glide to the new zoom rather than jump (only while adjusting, so a page never opens zooming in)
+      el.style.setProperty("transition", "object-view-box 0.14s ease-out");
+      clearTimeout(el._cdfyFitT);
+      el._cdfyFitT = setTimeout(() => el.style.removeProperty("transition"), 400);
+      vinylFit(el);
+      stagePlace();
+      toast(`cd-fy : CD fit ${Math.round((1 / next) * 100)}% zoom`);
+    },
+    { capture: true, passive: false }
+  );
+
 
   function measureVinyl(im) {
-    const S2 = 192;
+    const S2 = 256;
     const cv = document.createElement("canvas");
     cv.width = cv.height = S2;
     const ctx = cv.getContext("2d", { willReadFrequently: true });
@@ -1090,17 +1278,45 @@
     };
     const band = [];
     for (let rf = 0.975; rf <= 0.996; rf += 0.007) band.push(...ring(rf));
+    // The disc's edge is where the picture changes and stays changed for a few
+    // pixels inward: a thin line drawn in the surround (a ring, a scratch) is
+    // never taken for the disc. The first ring that differs still straddles the
+    // soft, anti-aliased edge, so trim about a pixel inside it.
+    const STEP = 0.004;
+    const RUN = [0, 0.012, 0.024]; // solid for about 3 px inward
+    const edgeAt = (hit, kind) => {
+      for (let rf = 0.985; rf > 0.4; rf -= STEP) {
+        if (RUN.every((o) => hit(rf - o))) {
+          if (rf >= 0.965) break;
+          measureWhy = `the record fills ${Math.round((rf - 0.008) * 100)}% of the picture (${kind} surround)`;
+          return rf - 0.008;
+        }
+      }
+      measureWhy = `the whole picture is the record (${kind} surround, no edge found inside it)`;
+      return 1;
+    };
+
+    // A see-through surround (a record cut out of its background): the disc
+    // is where the picture turns clearly more solid than the surround. The
+    // record itself may be partly see-through too (a clear vinyl), so "solid"
+    // is half-way between the surround and fully opaque.
+    const outerAlpha = band.reduce((s, p) => s + p[3], 0) / band.length / 255;
+    if (outerAlpha < 0.6) {
+      const cut = 255 * (outerAlpha + (1 - outerAlpha) * 0.5);
+      const solid = (rf) => ring(rf).filter((p) => p[3] > cut).length / ANG;
+      return edgeAt((rf) => solid(rf) > 0.8, "see-through");
+    }
+
+    // A solid surround: the disc is where the colour differs from it.
     const ref = [0, 1, 2, 3].map((c) => band.reduce((s, p) => s + p[c], 0) / band.length);
     const dev = (pts) =>
       pts.reduce((s, p) => s + Math.abs(p[0] - ref[0]) + Math.abs(p[1] - ref[1]) + Math.abs(p[2] - ref[2]) + Math.abs(p[3] - ref[3]), 0) /
       pts.length;
-    if (dev(band) > 28) return 1;
-    for (let rf = 0.97; rf > 0.5; rf -= 0.004) {
-      // The first ring that differs still straddles the soft, anti-aliased edge,
-      // so trim about a pixel inside it: no fringe of the surround is left.
-      if (dev(ring(rf)) > 38) return rf >= 0.955 ? 1 : rf - 0.01;
+    if (dev(band) > 28) {
+      measureWhy = "the whole picture is the record (its edge isn't a plain background)";
+      return 1;
     }
-    return 1;
+    return edgeAt((rf) => dev(ring(rf)) > 38, "plain");
   }
 
   // ---- the ripple -----------------------------------------------------------
@@ -1212,7 +1428,10 @@
     wave.canvas = null;
     wave.ctx = null;
     if (wave.el) waveMask(wave.el, false);
-    if (wave.parent && wave.parentPos) wave.parent.style.position = "";
+    if (wave.parent && wave.parentPos) {
+      // The platform may still need the record's box positioned.
+      if (!(stage.plat && stage.parent === wave.parent)) wave.parent.style.position = "";
+    }
     wave.parent = null;
     wave.parentPos = false;
   }
@@ -1299,7 +1518,8 @@
     const cs = Math.cos(spin);
     const sn = Math.sin(spin);
     // Picture px per box px (object-fit: cover).
-    const fit = Math.max(img.naturalWidth / w, img.naturalHeight / h);
+    // (times the zoom that makes a pictured record fill the CD)
+    const fit = Math.max(img.naturalWidth / w, img.naturalHeight / h) * wave.zoom;
     const offX = (img.naturalWidth - w * fit) / 2;
     const offY = (img.naturalHeight - h * fit) / 2;
     // Box position (px) -> the picture pixel that the spinning record shows there.
@@ -1437,12 +1657,14 @@
   function waveFrame() {
     const el = wave.el;
     const now = performance.now();
-    if (!el || !el.isConnected || !wave.canvas || !waveAllowed() || !waveAlive(now)) {
+    // A ripple already running dies away on its own, even if the CD starts spinning meanwhile.
+    if (!el || !el.isConnected || !wave.canvas || !(S.enabled && S.wave && isPlaylistPage()) || !waveAlive(now)) {
       waveEnd();
       return;
     }
     // The disc edge may have been measured since the click.
-    const rv = vinylEdge.get(wave.src) || 1;
+    const rv = discFrac(wave.src);
+    wave.zoom = zoomOf(wave.src);
     if (rv !== wave.rv) {
       wave.rv = rv;
       if (wave.masked) waveMask(el, true);
@@ -1458,11 +1680,14 @@
     if (e.button !== 0) return;
     const el = tiltTarget(e.target);
     if (!el) return; // not the header record: nothing to say
-    if (!waveAllowed()) return waveLog(!S.wave ? "turned off in the menu" : !S.enabled ? "cd-fy is disabled" : "not a playlist page");
+    if (!waveAllowed())
+      return waveLog(
+        !S.wave ? "turned off in the menu" : !S.enabled ? "cd-fy is disabled" : !isPlaylistPage() ? "not a playlist page" : "the CD is spinning (scratch it instead)"
+      );
     if (el.tagName !== "IMG") return waveLog("the header record is not an <img> (" + el.tagName + ")");
     detectVinyl(el);
     const src = el.currentSrc || el.src;
-    const rv = vinylEdge.get(src) || 1;
+    const rv = discFrac(src);
     const m = tiltMeasure(el, e.clientX, e.clientY);
     if (m.d > rv) return; // only on the disc itself, not the picture's background around it
     e.preventDefault(); // no image drag, no text selection
@@ -1471,6 +1696,7 @@
     if (!waveSetup(el)) return waveLog("the record has no size yet");
     wave.src = src;
     wave.rv = rv;
+    wave.zoom = zoomOf(src);
     // The drop, in disc radii from the disc's centre (fixed to the screen, not the spinning picture).
     wave.drops.push({ x: m.dx / rv, y: m.dy / rv, t0: performance.now() });
     if (wave.drops.length > 6) wave.drops.shift();
@@ -1482,6 +1708,154 @@
 
   // Window capture: runs before anything on the page can swallow the press.
   window.addEventListener("mousedown", wavePress, true);
+
+  // -------------------------------- platform -------------------------------
+  // The header CD sits on a platform, as on a DJ deck: three stacked black
+  // metal plates, each with a bare stainless-steel edge. The top plate is the
+  // CD's own size, its steel edge just showing around the CD; the two below
+  // each step out a little further. The CD itself keeps exactly the size of
+  // the playlist picture, and the platform stays still while the CD spins.
+  //
+  // Under the CD is its own shadow: tight while it rests on the platform,
+  // farther and softer as it lifts toward the cursor, tighter still when it's
+  // pressed down to scratch.
+  //
+  // Layers, back to front, all inside the picture's own box:
+  //   platform 0, CD shadow 1, CD (the picture) 2, click wave 3.
+  const PLAT_STEP = [8, 5, 2]; // px each plate reaches past the CD: bottom, middle, top
+  const stage = {
+    rec: null, parent: null, plat: null, shadow: null, ro: null,
+    keep: null, // the inline styles we changed on Spotify's elements, to put back
+    key: "",
+  };
+
+  const stageAllowed = () => S.enabled && S.platform && document.body.classList.contains("cd-fy-header");
+
+  const layer = (id, html) => {
+    const d = document.createElement("div");
+    d.id = id;
+    d.className = "cdfy-layer";
+    if (html) d.innerHTML = html;
+    return d;
+  };
+
+  function stageBuild(el) {
+    const parent = el.parentElement;
+    const pcs = getComputedStyle(parent);
+    const ics = getComputedStyle(el);
+    stage.keep = {
+      pPos: parent.style.getPropertyValue("position"),
+      pIso: parent.style.getPropertyValue("isolation"),
+      pOver: parent.style.getPropertyValue("overflow"),
+      iPos: el.style.getPropertyValue("position"),
+      iZ: el.style.getPropertyValue("z-index"),
+    };
+    // Its own layer stack, and room for the platform past the picture's edge.
+    if (pcs.position === "static") parent.style.setProperty("position", "relative");
+    parent.style.setProperty("isolation", "isolate");
+    if (pcs.overflow !== "visible") parent.style.setProperty("overflow", "visible", "important");
+    // The CD above the platform and its shadow.
+    if (ics.position === "static") el.style.setProperty("position", "relative");
+    el.style.setProperty("z-index", "2");
+
+    // Each plate sits inside the one below it, stepped in.
+    const out = PLAT_STEP[0];
+    // Each plate's steel shows only as the ring between it and the plate (or CD) above.
+    const plates = PLAT_STEP.map((step, i) => {
+      const ring = step - (PLAT_STEP[i + 1] || 0);
+      return `<div class="cdfy-plate cdfy-plate-${i + 1}" style="inset:${out - step}px"><div class="cdfy-face" style="inset:${ring}px"></div></div>`;
+    }).join("");
+    stage.plat = layer("cd-fy-platform", plates);
+    stage.shadow = layer("cd-fy-cdshadow");
+    el.before(stage.plat, stage.shadow);
+    el.classList.add("cdfy-round");
+    stage.rec = el;
+    stage.parent = parent;
+    stage.key = "";
+    if (window.ResizeObserver) {
+      stage.ro = new ResizeObserver(() => stagePlace());
+      stage.ro.observe(el);
+    }
+  }
+
+  function stageTeardown() {
+    if (stage.ro) stage.ro.disconnect();
+    if (stage.plat) stage.plat.remove();
+    if (stage.shadow) stage.shadow.remove();
+    const el = stage.rec;
+    const p = stage.parent;
+    const k = stage.keep;
+    const put = (node, prop, v) => (v ? node.style.setProperty(prop, v) : node.style.removeProperty(prop));
+    if (el) {
+      el.classList.remove("cdfy-round");
+      if (k) {
+        put(el, "position", k.iPos);
+        put(el, "z-index", k.iZ);
+      }
+    }
+    if (p && k) {
+      put(p, "isolation", k.pIso);
+      put(p, "overflow", k.pOver);
+      // The click wave may still need the box positioned.
+      if (!(wave.canvas && wave.parent === p)) put(p, "position", k.pPos);
+    }
+    Object.assign(stage, { rec: null, parent: null, plat: null, shadow: null, ro: null, keep: null, key: "" });
+  }
+
+  // Centre the platform and the CD's shadow on the CD.
+  function stagePlace() {
+    const el = stage.rec;
+    if (!el || !el.isConnected || !stage.plat) return;
+    const spot = waveSpot(el);
+    const D = Math.min(spot.w, spot.h);
+    if (!D) return;
+    const cx = spot.left + spot.w / 2;
+    const cy = spot.top + spot.h / 2;
+    const R = (D / 2) * discFrac(el.currentSrc || el.src); // the CD's radius
+    const put = (box, r) => {
+      box.style.setProperty("left", (cx - r).toFixed(2) + "px", "important");
+      box.style.setProperty("top", (cy - r).toFixed(2) + "px", "important");
+      box.style.setProperty("width", (2 * r).toFixed(2) + "px", "important");
+      box.style.setProperty("height", (2 * r).toFixed(2) + "px", "important");
+    };
+    put(stage.plat, R + PLAT_STEP[0]);
+    put(stage.shadow, R);
+    stage.key = "";
+  }
+
+  // The CD's shadow follows its lift and press-down. Called whenever its transform is written.
+  function sheenFollow(el) {
+    if (!stage.rec || el !== stage.rec || !stage.shadow) return;
+    const s = states.get(el);
+    const sc = s && s.scale !== undefined ? s.scale : 1;
+    const on = tilt.el === el;
+    const rx = on ? tilt.rx : 0;
+    const ry = on ? tilt.ry : 0;
+    const h = on ? tilt.h : 0; // lift: 0 resting on the platform, 1 hovering; dips just below 0 as it lands
+    const press = Math.max(0, Math.min(1, (1 - sc) / (1 - PRESS_SCALE)));
+    const key = rx.toFixed(2) + "|" + ry.toFixed(2) + "|" + h.toFixed(4) + "|" + press.toFixed(3);
+    if (key === stage.key) return;
+    stage.key = key;
+    // Light from the upper left: the shadow falls to the lower right.
+    const x = 0.6 + 6 * h + ry * 0.1;
+    const y = 1.6 + 12 * h - rx * 0.1 - 1 * press;
+    const blur = Math.max(1, 2.5 + 12 * h - 1.5 * press);
+    const a = Math.min(0.85, 0.7 - 0.25 * h + 0.1 * press);
+    stage.shadow.style.setProperty("transform", `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px)`, "important");
+    stage.shadow.style.setProperty("filter", `blur(${blur.toFixed(2)}px)`, "important");
+    stage.shadow.style.setProperty("opacity", a.toFixed(3), "important");
+  }
+
+  // From tick: set the platform up under the header CD, or take it away.
+  function sheenSync() {
+    const cand = stageAllowed() ? headerEls()[0] : null;
+    const el = cand && cand.tagName === "IMG" && cand.parentElement ? cand : null;
+    if (stage.rec && (stage.rec !== el || !stage.rec.isConnected || !stage.plat.isConnected)) stageTeardown();
+    if (!el) return;
+    if (!stage.rec) stageBuild(el);
+    stagePlace();
+    sheenFollow(el);
+  }
 
   // ------------------------------ main loop --------------------------------
   let headerInUse = false;
@@ -1501,13 +1875,16 @@
     // trimmed to the disc in its picture; otherwise it's left as Spotify draws it.
     const onPlaylist = isPlaylistPage();
     const hdr = headerEls();
-    const inUse = S.enabled && onPlaylist && (S.tilt || S.wave || hdr.some((el) => running.has(el)));
+    const inUse = S.enabled && onPlaylist && (S.tilt || S.wave || S.platform || hdr.some((el) => running.has(el)));
     if (inUse !== headerInUse) {
       headerInUse = inUse;
       document.body.classList.toggle("cd-fy-header", inUse);
     }
     if (inUse) hdr.forEach(detectVinyl);
     else hdr.forEach(vinylUnfit);
+    sheenSync();
+    // Playback started: a lifted CD drops back onto its platform.
+    if (tilt.el && tilt.th > 0 && !tiltAllowed()) tiltSettle();
 
     const pathOrUriChanged = currentP !== lastCheckPath || uri !== lastCheckUri;
     if (pathOrUriChanged) {
@@ -1630,6 +2007,16 @@
       wave: {
         text: "click wave (playlist page)",
         active: S.wave,
+        isTitle: false,
+      },
+      fitReset: {
+        text: "reset CD fit (this playlist)",
+        active: false,
+        isTitle: false,
+      },
+      platform: {
+        text: "platform (playlist page)",
+        active: S.platform,
         isTitle: false,
       },
       whereLabel: {
@@ -1763,6 +2150,7 @@
     fx: "scratch press-down",
     tilt: "hover tilt",
     wave: "click wave",
+    platform: "platform",
     header: "playlist header",
     sidebar: "sidebar",
     everywhere: "home & shelves",
@@ -1807,6 +2195,19 @@
         mk("fx",            () => toggle("fx")),
         mk("tilt",          () => toggle("tilt")),
         mk("wave",          () => toggle("wave")),
+        mk("platform",      () => toggle("platform")),
+        mk("fitReset",      () => {
+          const k = fitKey();
+          if (k && S.fits && S.fits[k]) {
+            const f = Object.assign({}, S.fits);
+            delete f[k];
+            S.fits = f;
+            save();
+            headerEls().forEach(vinylFit);
+            stagePlace();
+          }
+          toast("cd-fy : CD fit reset for this playlist");
+        }),
         sep("whereLabel"),
         mk("header",        () => toggle("header")),
         mk("sidebar",       () => toggle("sidebar")),
@@ -1860,6 +2261,24 @@
       sidebarMatches: ctx ? sidebarImgs().filter((i) => rowMatches(i, ctx.id)).length : 0,
       menu: !!Object.keys(menuItems).length,
       tilt: { active: !!tilt.el, rotateX: +tilt.rx.toFixed(2), rotateY: +tilt.ry.toFixed(2) },
+      stage: {
+        platform: !!stage.plat,
+        fitByHand: (S.fits && S.fits[fitKey()]) || "none",
+        cover: (() => {
+          const el = headerEls()[0];
+          const src = el && (el.currentSrc || el.src);
+          if (!src) return "no header picture found";
+          return {
+            picture: src.replace(/^https?:\/\//, "").slice(0, 60),
+            size: el.naturalWidth + "x" + el.naturalHeight,
+            measured: vinylWhy.get(src) || "not measured yet",
+            zoomedTo: ZOOM_OK ? (el.style.objectViewBox || "whole picture") : "zoom not supported",
+          };
+        })(),
+        lift: +tilt.h.toFixed(3),
+        shadow: stage.shadow ? stage.shadow.style.transform + " " + stage.shadow.style.filter : "",
+        zoom: ZOOM_OK,
+      },
       wave: { active: wave.active, drops: wave.drops.length, shiftPx: +wave.peak.toFixed(3), discEdge: wave.el ? vinylEdge.get(wave.src) : null },
     };
     console.log(info);
