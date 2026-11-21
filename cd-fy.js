@@ -1953,6 +1953,7 @@
         text: "speed.",
         active: false,
         isTitle: true,
+        kind: "title",
       },
       rpm10: {
         text: "slow : ten rpm",
@@ -1973,11 +1974,13 @@
         text: "behaviour.",
         active: false,
         isTitle: true,
+        kind: "title",
       },
       dir: {
         text: `direction : ${S.dir > 0 ? "clockwise" : "counter-clockwise"}`,
-        active: S.dir > 0,
+        active: true, // a choice between two directions, never "off"
         isTitle: false,
+        kind: "choice",
       },
       smooth: {
         text: "smooth ramp",
@@ -2013,6 +2016,7 @@
         text: "reset CD fit (this playlist)",
         active: false,
         isTitle: false,
+        kind: "action",
       },
       platform: {
         text: "platform (playlist page)",
@@ -2023,6 +2027,7 @@
         text: "where to spin.",
         active: false,
         isTitle: true,
+        kind: "title",
       },
       header: {
         text: "playlist header",
@@ -2043,8 +2048,28 @@
         text: "reset to defaults.",
         active: false,
         isTitle: false,
+        kind: "action",
       },
     };
+  }
+
+  // The menu's look. Headings: white and bold. On/off items: Spotify green when on,
+  // greyed out when off (speed and direction: the current choice is green).
+  // Actions (the resets): plain white.
+  const MENU_GREEN = "#1ed760";
+  function menuLook(def) {
+    const kind = def.kind || (def.isTitle ? "title" : "toggle");
+    if (kind === "title") return { color: "#ffffff", fontWeight: "700", letterSpacing: "0.3px" };
+    if (kind === "action") return { color: "#ffffff", fontWeight: "400", letterSpacing: "" };
+    return def.active
+      ? { color: MENU_GREEN, fontWeight: "600", letterSpacing: "" }
+      : { color: "rgba(255, 255, 255, 0.5)", fontWeight: "400", letterSpacing: "" };
+  }
+  // Each item's label carries its own colour, so it's right however Spotify draws the menu.
+  function menuLabel(def) {
+    const R = Spicetify.React;
+    if (!R || !R.createElement) return def.text;
+    return R.createElement("span", { style: menuLook(def), "data-cdfy-menu": def.kind || (def.isTitle ? "title" : "toggle") }, def.text);
   }
 
   function applyDomStyles() {
@@ -2083,10 +2108,12 @@
       }
 
       if (matchedDef && targetSpan) {
+        // Backup for a label drawn as plain text: the same look, set on the drawn element.
+        const look = menuLook(matchedDef);
+        targetSpan.style.color = look.color;
+        targetSpan.style.fontWeight = look.fontWeight;
+        targetSpan.style.letterSpacing = look.letterSpacing;
         if (matchedDef.isTitle) {
-          targetSpan.style.fontWeight = "700";
-          targetSpan.style.color = "#ffffff";
-          targetSpan.style.letterSpacing = "0.3px";
           targetSpan.style.userSelect = "none";
           btn.style.cursor = "default";
           btn.style.pointerEvents = "none";
@@ -2095,14 +2122,6 @@
           btn.setAttribute("aria-disabled", "true");
           if (btn.parentElement && (btn.parentElement.tagName === "LI" || btn.parentElement.getAttribute("role") === "presentation")) {
             btn.parentElement.style.pointerEvents = "none";
-          }
-        } else {
-          if (matchedDef.active) {
-            targetSpan.style.color = "#1ed760";
-            targetSpan.style.fontWeight = "600";
-          } else {
-            targetSpan.style.color = "rgba(255, 255, 255, 0.65)";
-            targetSpan.style.fontWeight = "400";
           }
         }
       }
@@ -2114,15 +2133,8 @@
     Object.keys(defs).forEach((k) => {
       const it = menuItems[k];
       if (!it) return;
-      const def = defs[k];
       try {
-        if (typeof it.setName === "function") it.setName(def.text);
-      } catch (e) {}
-      try {
-        if (it.name !== undefined) it.name = def.text;
-      } catch (e) {}
-      try {
-        if (it.children !== undefined) it.children = def.text;
+        it.children = menuLabel(defs[k]);
       } catch (e) {}
     });
     applyDomStyles();
@@ -2174,8 +2186,8 @@
   try {
     if (Spicetify.Menu && Spicetify.Menu.Item && Spicetify.Menu.SubMenu) {
       const defs = getMenuDef();
-      const mk = (key, fn) => (menuItems[key] = new Spicetify.Menu.Item(defs[key].text, false, fn));
-      const sep = (key) => (menuItems[key] = new Spicetify.Menu.Item(defs[key].text, false, () => {}));
+      const mk = (key, fn) => (menuItems[key] = new Spicetify.Menu.Item(menuLabel(defs[key]), false, fn));
+      const sep = (key) => (menuItems[key] = new Spicetify.Menu.Item(menuLabel(defs[key]), false, () => {}));
       const list = [
         mk("enabled",       () => toggle("enabled")),
         sep("speedLabel"),
@@ -2196,6 +2208,10 @@
         mk("tilt",          () => toggle("tilt")),
         mk("wave",          () => toggle("wave")),
         mk("platform",      () => toggle("platform")),
+        sep("whereLabel"),
+        mk("header",        () => toggle("header")),
+        mk("sidebar",       () => toggle("sidebar")),
+        mk("everywhere",    () => toggle("everywhere")),
         mk("fitReset",      () => {
           const k = fitKey();
           if (k && S.fits && S.fits[k]) {
@@ -2208,10 +2224,6 @@
           }
           toast("cd-fy : CD fit reset for this playlist");
         }),
-        sep("whereLabel"),
-        mk("header",        () => toggle("header")),
-        mk("sidebar",       () => toggle("sidebar")),
-        mk("everywhere",    () => toggle("everywhere")),
         mk("reset",         () => {
           Object.assign(S, DEFAULTS);
           save();
