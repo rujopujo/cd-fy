@@ -43,6 +43,7 @@
     tilt: true,
     wave: true,
     platform: true,
+    cdcase: true, // the CD is kept in a glass case on the playlist page
     fits: {}, // CD fit set by hand, per playlist (fraction of the picture that is record)
   };
   const RPM_PRESETS = [10, 30, 50];
@@ -310,6 +311,395 @@
       background: #000 !important;
       opacity: 0.7;
       will-change: transform, filter, opacity;
+    }
+    /* ---- the CD case ---- */
+    /* A clear glass jewel case: everything is see-through except the black spine.
+       With the case on, the tray is what the CD sits in: no platform. */
+    body.cdfy-cased #cd-fy-platform {
+      display: none !important;
+    }
+    /* Spotify grows your own playlist's cover a little under the cursor: not the case */
+    body.cdfy-cased .main-entityHeader-imageContainerClickable,
+    body.cdfy-cased .main-entityHeader-imageContainerClickable:hover {
+      transform: none !important;
+    }
+    /* The tray: clear plastic with a raised inner frame, the round seat the CD sits in,
+       and the little clips along its top and bottom edges */
+    #cd-fy-tray {
+      z-index: 0;
+      pointer-events: auto !important;
+      border-radius: 3px 0 0 3px !important;
+      /* Clear glass: whatever is behind the header shows through, only a touch softened */
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.05)) !important;
+      -webkit-backdrop-filter: blur(1.5px) saturate(1.05);
+      backdrop-filter: blur(1.5px) saturate(1.05);
+      /* Lit from the upper left: a bright bevel on the top and left edges, a shaded one on the
+         bottom and right, and the case's thickness showing as clear glass walls below and to the right */
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.16),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.14),
+        inset 0 0 22px rgba(255, 255, 255, 0.05),
+        1px 1px 0 rgba(255, 255, 255, 0.3),
+        2px 2px 0 rgba(255, 255, 255, 0.12),
+        3px 3px 0 rgba(255, 255, 255, 0.1),
+        4px 4px 0 rgba(255, 255, 255, 0.08),
+        5px 5px 0 rgba(255, 255, 255, 0.07),
+        6px 6px 0 rgba(255, 255, 255, 0.22),
+        7px 7px 0 rgba(0, 0, 0, 0.12),
+        8px 10px 4px rgba(0, 0, 0, 0.2),
+        14px 20px 34px rgba(0, 0, 0, 0.3);
+    }
+    #cd-fy-tray.is-open {
+      cursor: pointer;
+    }
+    #cd-fy-tray .cdfy-frame {
+      position: absolute;
+      inset: 5px calc(var(--sw) + 5px) 5px 5px;
+      border-radius: 2px;
+      /* the tray's moulded inner wall: in shadow on its upper left, lit on its lower right */
+      box-shadow:
+        inset 1px 1px 0 rgba(0, 0, 0, 0.2),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.2),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        1px 1px 0 1px rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+    }
+    #cd-fy-tray .cdfy-recess {
+      position: absolute;
+      left: calc(var(--cdx) - var(--recess));
+      top: calc(50% - var(--recess));
+      width: calc(var(--recess) * 2);
+      height: calc(var(--recess) * 2);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 0, 0, 0) 62%, rgba(0, 0, 0, 0.08));
+      /* a seat sunk into the tray: deep on the upper left, its far rim catching the light */
+      box-shadow:
+        inset 3px 4px 7px rgba(0, 0, 0, 0.32),
+        inset -1px -1px 0 rgba(255, 255, 255, 0.22),
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        -1px -1px 0 1px rgba(0, 0, 0, 0.1);
+      pointer-events: none;
+    }
+    #cd-fy-tray .cdfy-clip {
+      position: absolute;
+      height: 5px;
+      border-radius: 1px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      pointer-events: none;
+    }
+    /* The lid's hinge, and the eye above the case */
+    #cd-fy-lidwrap {
+      z-index: 4;
+      overflow: visible !important;
+      perspective: 2000px;
+      background: transparent !important;
+      border-radius: 0 !important;
+    }
+    /* The lid: a shallow box of clear glass hinged on the spine's outer edge. Its face is the
+       glossy top; three thin walls (top, bottom and the open side) drop down from it over the
+       tray's edges, the way a real jewel case lid is moulded. */
+    #cd-fy-lid {
+      position: absolute;
+      inset: 0;
+      transform-origin: 100% 50%;
+      transform-style: preserve-3d;
+      will-change: transform;
+      pointer-events: none;
+    }
+    #cd-fy-lid .cdfy-face {
+      position: absolute;
+      inset: 0;
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      pointer-events: auto;
+      cursor: pointer;
+      backface-visibility: visible;
+      /* light caught by the moulded corners, brightest toward the light */
+      background:
+        radial-gradient(20px 20px at 3px 3px, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(16px 16px at calc(100% - 3px) 3px, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(16px 16px at 3px calc(100% - 3px), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%),
+        radial-gradient(18px 18px at calc(100% - 3px) calc(100% - 3px), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%),
+        linear-gradient(128deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, 0.04) 100%);
+      -webkit-backdrop-filter: blur(0.35px) saturate(1.06) brightness(1.03);
+      backdrop-filter: blur(0.35px) saturate(1.06) brightness(1.03);
+      /* thick glass: a bright outer edge, a bevel lit on the top left and shaded on the bottom
+         right, and the lid's raised lip a few pixels in, bevelled the other way */
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.16),
+        inset 0 0 0 3px rgba(255, 255, 255, 0.05),
+        inset 0 0 0 6px rgba(255, 255, 255, 0.02),
+        inset -7px -7px 0 -6px rgba(255, 255, 255, 0.26),
+        inset 7px 7px 0 -6px rgba(0, 0, 0, 0.14),
+        inset 0 0 0 7px rgba(255, 255, 255, 0.1),
+        inset 0 0 26px rgba(255, 255, 255, 0.05),
+        0 calc(1px + 14px * var(--lift, 0)) calc(3px + 24px * var(--lift, 0)) rgba(0, 0, 0, calc(0.1 + 0.16 * var(--lift, 0)));
+      transition: background-color 0.35s ease;
+    }
+    /* Shut, the lid is held by its latch: only the thumb groove opens it */
+    #cd-fy-lid.is-shut .cdfy-face {
+      cursor: default;
+    }
+    #cd-fy-lid .cdfy-wall {
+      position: absolute;
+      pointer-events: none;
+      backface-visibility: visible;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1) 60%, rgba(255, 255, 255, 0.18));
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    #cd-fy-lid .cdfy-wall-top {
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: var(--wall, 7px);
+      transform-origin: 50% 0;
+      transform: rotateX(-90deg);
+      border-radius: 4px 4px 0 0;
+    }
+    #cd-fy-lid .cdfy-wall-bottom {
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: var(--wall, 7px);
+      transform-origin: 50% 100%;
+      transform: rotateX(90deg);
+      border-radius: 0 0 4px 4px;
+    }
+    #cd-fy-lid .cdfy-wall-side {
+      left: 0;
+      top: 0;
+      width: var(--wall, 7px);
+      height: 100%;
+      transform-origin: 0 50%;
+      transform: rotateY(90deg);
+      border-radius: 4px 0 0 4px;
+    }
+    /* The thumb groove on the open side: a scooped notch in the lid's edge to push it up by */
+    #cd-fy-lid .cdfy-groove {
+      position: absolute;
+      left: -6px;
+      top: 50%;
+      width: 24px;
+      height: 22%;
+      transform: translateY(-50%);
+      pointer-events: auto;
+      cursor: grab;
+    }
+    #cd-fy-lid .cdfy-groove::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      top: 0;
+      width: 11px;
+      height: 100%;
+      border-radius: 0 999px 999px 0;
+      background:
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(255, 255, 255, 0) 1px 4px),
+        linear-gradient(90deg, rgba(0, 20, 30, 0.32), rgba(255, 255, 255, 0.08));
+      box-shadow:
+        inset 2px 0 3px rgba(0, 0, 0, 0.35),
+        inset -1px 0 0 rgba(255, 255, 255, 0.45),
+        inset 0 1px 0 rgba(0, 0, 0, 0.2),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+      transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #cd-fy-lid .cdfy-groove:hover::before {
+      background-color: rgba(255, 255, 255, 0.12);
+    }
+    #cd-fy-lid.is-open .cdfy-groove,
+    #cd-fy-lid.is-grabbed .cdfy-groove {
+      cursor: grabbing;
+    }
+    /* A press on the shut lid away from the groove: the groove glows to show where to push */
+    @keyframes cdfy-hint {
+      0%, 100% { box-shadow: inset 2px 0 3px rgba(0, 0, 0, 0.35), inset -1px 0 0 rgba(255, 255, 255, 0.45), 0 0 0 0 rgba(255, 255, 255, 0); }
+      40% { box-shadow: inset 2px 0 3px rgba(0, 0, 0, 0.2), inset -1px 0 0 rgba(255, 255, 255, 0.8), 0 0 12px 2px rgba(255, 255, 255, 0.55); }
+    }
+    #cd-fy-lid .cdfy-groove.cdfy-hint::before {
+      animation: cdfy-hint 0.9s ease-in-out 2;
+    }
+    /* The latch on the tray the lid clicks onto, under the groove */
+    #cd-fy-tray .cdfy-latch {
+      position: absolute;
+      left: 1px;
+      top: 50%;
+      width: 4px;
+      height: 12%;
+      transform: translateY(-50%);
+      border-radius: 1px;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.08));
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 1px 0 1px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
+      transition: transform 0.12s ease;
+    }
+    #cd-fy-tray .cdfy-latch.cdfy-unlatch {
+      transform: translateY(-50%) translateX(-1.5px);
+    }
+    /* A thick, bright rim, as on liquid glass: brightest where the light hits */
+    #cd-fy-lid .cdfy-face::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 2px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.1) 28%, rgba(255, 255, 255, 0.02) 62%, rgba(255, 255, 255, 0.5));
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+      pointer-events: none;
+    }
+    /* The light on the glass: a streak that runs over as the lid turns, and a soft glint under the cursor */
+    #cd-fy-lid .cdfy-face::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        radial-gradient(40% 36% at var(--gx, 30%) var(--gy, 20%), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 70%),
+        linear-gradient(108deg, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0.16) 43%, rgba(255, 255, 255, 0.04) 50%, rgba(255, 255, 255, 0) 57%, rgba(255, 255, 255, 0) 66%, rgba(255, 255, 255, 0.07) 70%, rgba(255, 255, 255, 0) 75%);
+      background-size: 100% 100%, 240% 100%;
+      background-position: 0 0, var(--sweep, 78%) 0;
+      background-repeat: no-repeat;
+      opacity: 0.75;
+      transition: opacity 0.35s ease;
+    }
+    #cd-fy-lid.is-hover .cdfy-face::after {
+      opacity: 1;
+    }
+    #cd-fy-lid.is-shut.is-hover .cdfy-face {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+    /* The spine: the only solid part, a square bar of black plastic with ribbed ends */
+    #cd-fy-spine {
+      z-index: 5;
+      display: flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: calc(var(--btn) * 0.55);
+      border-radius: 0 !important;
+      /* rounded black plastic: a highlight down its left, ribbed grips and lit end caps at the
+         top and bottom, and its thickness showing below and to the right, as the tray does */
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 3px),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0) 4px),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.35) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 4px / 100% 9% no-repeat,
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.35) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 calc(100% - 4px) / 100% 9% no-repeat,
+        linear-gradient(90deg, #000000 0%, #2c2c31 16%, #141416 38%, #070708 66%, #1c1c1f 90%, #050505 100%) !important;
+      box-shadow:
+        inset 1px 0 0 rgba(255, 255, 255, 0.1),
+        inset -1px 0 0 rgba(255, 255, 255, 0.16),
+        1px 1px 0 #111113,
+        2px 2px 0 #0e0e10,
+        3px 3px 0 #0b0b0c,
+        4px 4px 0 #09090a,
+        5px 5px 0 #070708,
+        6px 6px 0 #040405,
+        7px 8px 3px rgba(0, 0, 0, 0.35),
+        14px 20px 34px rgba(0, 0, 0, 0.42);
+    }
+    #cd-fy-spine .cdfy-btn {
+      all: unset;
+      box-sizing: border-box;
+      pointer-events: auto !important;
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: var(--btn);
+      height: var(--btn);
+      border-radius: 3px;
+      cursor: pointer;
+      color: rgba(255, 255, 255, 0.88);
+      /* a square key standing in a well in the spine: lit top, thick lower edge */
+      background: linear-gradient(180deg, #34343a, #1a1a1d 55%, #121214);
+      box-shadow:
+        0 0 0 1px #000000,
+        0 1px 0 1px rgba(255, 255, 255, 0.07),
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        inset 1px 0 0 rgba(255, 255, 255, 0.08),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.55),
+        0 2px 3px rgba(0, 0, 0, 0.6);
+      transform: translateY(0) scale(1);
+      transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+    #cd-fy-spine .cdfy-play {
+      width: calc(var(--btn) * 1.12);
+      height: calc(var(--btn) * 1.12);
+    }
+    #cd-fy-spine .cdfy-btn:hover {
+      color: #ffffff;
+      background: linear-gradient(180deg, #414148, #222226 55%, #17171a);
+    }
+    #cd-fy-spine .cdfy-btn:focus-visible {
+      box-shadow: 0 0 0 2px #1ed760, inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    #cd-fy-spine .cdfy-btn.is-down {
+      transform: translateY(1px) scale(0.95);
+      color: #1ed760;
+      background: linear-gradient(180deg, #141416, #1c1c1f);
+      box-shadow:
+        0 0 0 1px #000000,
+        0 1px 0 1px rgba(255, 255, 255, 0.07),
+        inset 0 2px 3px rgba(0, 0, 0, 0.7),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+        0 0 10px rgba(30, 215, 96, 0.3);
+      transition:
+        transform 0.08s ease-out,
+        color 0.08s ease,
+        background 0.08s ease,
+        box-shadow 0.08s ease;
+    }
+    #cd-fy-spine .cdfy-btn svg {
+      width: 56%;
+      height: 56%;
+      fill: currentColor;
+    }
+    #cd-fy-spine .cdfy-play svg {
+      width: 62%;
+      height: 62%;
+    }
+    /* Play / pause shows both; the half for what's happening now is a little brighter */
+    #cd-fy-spine .cdfy-play .pp-play, #cd-fy-spine .cdfy-play .pp-pause {
+      transition: opacity 0.25s ease;
+    }
+    #cd-fy-spine .cdfy-play .pp-pause { opacity: 0.6; }
+    #cd-fy-spine .cdfy-play.is-playing .pp-play { opacity: 0.6; }
+    #cd-fy-spine .cdfy-play.is-playing .pp-pause { opacity: 1; }
+    /* The glint under the cursor glides after it rather than jumping */
+    @property --gx { syntax: "<percentage>"; inherits: true; initial-value: 30%; }
+    @property --gy { syntax: "<percentage>"; inherits: true; initial-value: 20%; }
+    #cd-fy-lid {
+      transition: --gx 0.35s cubic-bezier(0.22, 0.8, 0.24, 1), --gy 0.35s cubic-bezier(0.22, 0.8, 0.24, 1);
+    }
+    /* A case appearing on a newly opened playlist */
+    @keyframes cdfy-in {
+      from { opacity: 0; scale: 0.985; }
+      to { opacity: 1; scale: 1; }
+    }
+    .cdfy-in {
+      animation: cdfy-in 0.42s cubic-bezier(0.22, 0.8, 0.24, 1) both;
+    }
+    /* The click of the case shutting */
+    @keyframes cdfy-snap {
+      0% { translate: 0 0; scale: 1; }
+      28% { translate: 0 0.5px; scale: 0.995; }
+      62% { translate: 0 -0.1px; scale: 1.0008; }
+      100% { translate: 0 0; scale: 1; }
+    }
+    .cdfy-snap {
+      animation: cdfy-snap 0.32s cubic-bezier(0.3, 0, 0.3, 1);
     }
   `;
   document.head.appendChild(style);
@@ -696,8 +1086,8 @@
     (e) => {
       if (!S.enabled || e.button !== 0) return; // Left mouse button only
 
-      // ONLY allow scratching when the song is playing
-      if (!isPlaying()) return;
+      // ONLY allow scratching when the song is playing, and the CD's case is open
+      if (!isPlaying() || caseUi(e.target) || caseLocked()) return;
 
       // ONLY allow scratching when the playlist is open (the playlist header record)
       const headerList = headerEls();
@@ -931,7 +1321,7 @@
       return !!s && s.mode !== "idle";
     });
   // Lifting and bending only while the CD is still: a spinning CD stays down on its platform, for scratching.
-  const tiltAllowed = () => S.enabled && S.tilt && isPlaylistPage() && !headerSpinning();
+  const tiltAllowed = () => S.enabled && S.tilt && isPlaylistPage() && !headerSpinning() && !caseLocked();
 
   // The record's flat circle on screen, from its layout box placed by its
   // parent's rect, so neither the spin nor the tilt can skew the measurement.
@@ -968,7 +1358,7 @@
   }
 
   function tiltTarget(target) {
-    if (!target || !target.closest) return null;
+    if (!target || !target.closest || caseUi(target)) return null;
     for (const el of headerEls()) {
       if (el === target || el.contains(target)) return el;
       const wrap = el.closest ? el.closest(HEADER_WRAP_SEL) : null;
@@ -1139,7 +1529,7 @@
   };
 
   // Not while the CD is spinning: then it's for scratching.
-  const waveAllowed = () => S.enabled && S.wave && isPlaylistPage() && !headerSpinning();
+  const waveAllowed = () => S.enabled && S.wave && isPlaylistPage() && !headerSpinning() && !caseLocked();
   const waveLog = (why) => console.info("[cd-fy] click wave not started:", why);
 
   // ---- where the disc ends inside the cover picture -------------------------
@@ -1156,23 +1546,41 @@
     if (vinylEdge.has(src)) return vinylFit(el);
     vinylEdge.set(src, 1); // until measured: the whole cover
     vinylWhy.set(src, "measuring");
+    // A playlist cover uploaded by its owner comes in sizes: the small one keeps its
+    // see-through background, while the larger ones Spotify shows in the header are JPEGs
+    // with that background turned black. The record is the same size in all of them, so
+    // measure the see-through one, where its edge is plain to see.
+    const msrc = src.replace(/(\/image\/ab67706c)[0-9a-f]{8}/, "$10000d72c");
+    const done = (edge) => {
+      vinylEdge.set(src, edge);
+      vinylWhy.set(src, measureWhy);
+      headerEls().forEach(vinylFit);
+    };
+    // If the picture can't be read the usual way, fetch its data and read that instead.
+    const viaFetch = (why) => {
+      fetch(msrc, { mode: "cors", credentials: "omit" })
+        .then((r) => {
+          if (!r.ok) throw new Error("HTTP " + r.status);
+          return r.blob();
+        })
+        .then((b) => createImageBitmap(b))
+        .then((bm) => done(measureVinyl(bm)))
+        .catch((err) => {
+          vinylWhy.set(src, why + "; reading it directly failed too (" + ((err && err.message) || err) + ")");
+          console.info("[cd-fy] couldn't read the cover to find the disc's edge; showing the whole cover", err);
+        });
+    };
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.onload = () => {
       try {
-        vinylEdge.set(src, measureVinyl(im));
-        vinylWhy.set(src, measureWhy);
-        headerEls().forEach(vinylFit);
+        done(measureVinyl(im));
       } catch (e) {
-        vinylWhy.set(src, "Spotify didn't let the extension read this picture's pixels");
-        console.info("[cd-fy] couldn't read the cover to find the disc's edge; showing the whole cover");
+        viaFetch("the picture's pixels couldn't be read (" + e.name + ")");
       }
     };
-    im.onerror = () => {
-      vinylWhy.set(src, "the picture couldn't be loaded for measuring");
-      console.info("[cd-fy] couldn't load the cover to find the disc's edge; showing the whole cover");
-    };
-    im.src = src;
+    im.onerror = () => viaFetch("the picture couldn't be loaded for measuring");
+    im.src = msrc;
   }
 
   // A cover that is a picture of a record on a background is zoomed in to the
@@ -1183,7 +1591,7 @@
   const edgeOf = (src) => vinylEdge.get(src) || 1;
   // How much of the shown record's radius is disc: all of it once the picture is zoomed to the disc.
   // The fit set by hand for this playlist (Ctrl + mouse wheel over the CD), else the default:
-  // every CD starts zoomed in to 120%, so the record fills the platform.
+  // every CD is zoomed in to 120%, so the record fills it.
   const DEFAULT_ZOOM = 1.2;
   const fitKey = () => (currentPath().match(/^\/playlist\/([A-Za-z0-9]+)/) || [])[1] || "";
   const fitFor = (src) => {
@@ -1255,9 +1663,11 @@
     const cv = document.createElement("canvas");
     cv.width = cv.height = S2;
     const ctx = cv.getContext("2d", { willReadFrequently: true });
-    const sc = Math.max(S2 / im.naturalWidth, S2 / im.naturalHeight);
-    const dw = im.naturalWidth * sc;
-    const dh = im.naturalHeight * sc;
+    const iw = im.naturalWidth || im.width;
+    const ih = im.naturalHeight || im.height;
+    const sc = Math.max(S2 / iw, S2 / ih);
+    const dw = iw * sc;
+    const dh = ih * sc;
     ctx.drawImage(im, (S2 - dw) / 2, (S2 - dh) / 2, dw, dh);
     const d = ctx.getImageData(0, 0, S2, S2).data; // throws if the image isn't CORS-clean
     const half = S2 / 2;
@@ -1301,9 +1711,13 @@
     // record itself may be partly see-through too (a clear vinyl), so "solid"
     // is half-way between the surround and fully opaque.
     const outerAlpha = band.reduce((s, p) => s + p[3], 0) / band.length / 255;
+    // A record cut out like this often keeps a soft drop shadow round it: black, and only
+    // partly see-through. That is surround too, so a pixel counts as record only if it is
+    // fully solid, or partly see-through but not black (a clear vinyl's colours).
     if (outerAlpha < 0.6) {
       const cut = 255 * (outerAlpha + (1 - outerAlpha) * 0.5);
-      const solid = (rf) => ring(rf).filter((p) => p[3] > cut).length / ANG;
+      const isDisc = (p) => p[3] > cut && (p[3] > 247 || (p[0] * 0.3 + p[1] * 0.59 + p[2] * 0.11) / (p[3] / 255) > 40);
+      const solid = (rf) => ring(rf).filter(isDisc).length / ANG;
       return edgeAt((rf) => solid(rf) > 0.8, "see-through");
     }
 
@@ -1316,7 +1730,10 @@
       measureWhy = "the whole picture is the record (its edge isn't a plain background)";
       return 1;
     }
-    return edgeAt((rf) => dev(ring(rf)) > 38, "plain");
+    // The disc starts where most of the circle differs from the surround. (Averaging the
+    // whole circle let a record that is dark near its rim pass for more background.)
+    const differs = (p) => Math.abs(p[0] - ref[0]) + Math.abs(p[1] - ref[1]) + Math.abs(p[2] - ref[2]) + Math.abs(p[3] - ref[3]) > 45;
+    return edgeAt((rf) => ring(rf).filter(differs).length / ANG > 0.6, "plain");
   }
 
   // ---- the ripple -----------------------------------------------------------
@@ -1682,7 +2099,7 @@
     if (!el) return; // not the header record: nothing to say
     if (!waveAllowed())
       return waveLog(
-        !S.wave ? "turned off in the menu" : !S.enabled ? "cd-fy is disabled" : !isPlaylistPage() ? "not a playlist page" : "the CD is spinning (scratch it instead)"
+        !S.wave ? "turned off in the menu" : !S.enabled ? "cd-fy is disabled" : !isPlaylistPage() ? "not a playlist page" : caseLocked() ? "the CD case is shut" : "the CD is spinning (scratch it instead)"
       );
     if (el.tagName !== "IMG") return waveLog("the header record is not an <img> (" + el.tagName + ")");
     detectVinyl(el);
@@ -1729,7 +2146,7 @@
     key: "",
   };
 
-  const stageAllowed = () => S.enabled && S.platform && document.body.classList.contains("cd-fy-header");
+  const stageAllowed = () => S.enabled && (S.platform || S.cdcase) && document.body.classList.contains("cd-fy-header");
 
   const layer = (id, html) => {
     const d = document.createElement("div");
@@ -1779,6 +2196,7 @@
   }
 
   function stageTeardown() {
+    caseTeardown();
     if (stage.ro) stage.ro.disconnect();
     if (stage.plat) stage.plat.remove();
     if (stage.shadow) stage.shadow.remove();
@@ -1821,6 +2239,7 @@
     put(stage.plat, R + PLAT_STEP[0]);
     put(stage.shadow, R);
     stage.key = "";
+    caseSync(cx, cy, R);
   }
 
   // The CD's shadow follows its lift and press-down. Called whenever its transform is written.
@@ -1853,9 +2272,579 @@
     if (stage.rec && (stage.rec !== el || !stage.rec.isConnected || !stage.plat.isConnected)) stageTeardown();
     if (!el) return;
     if (!stage.rec) stageBuild(el);
+    stage.plat.style.display = S.platform ? "" : "none";
     stagePlace();
+    document.body.classList.toggle("cdfy-cased", !!kase.tray);
     sheenFollow(el);
   }
+
+  // -------------------------------- cd case --------------------------------
+  // The header CD is kept in a glass jewel case. A smoky tray holds the CD, a
+  // clear glass lid lies over it and a black spine runs down the right side,
+  // where the lid is hinged. The spine carries the player's buttons: next on
+  // top, play / pause in the middle, previous below.
+  //
+  // Closed, the CD can't be touched: it still spins while music plays, but it
+  // can't be lifted, bent, rippled or scratched. Click the lid and it swings
+  // open on its hinge, a full half turn, to lie flat to the right of the case
+  // (the playlist's title moves over with it); then the CD can be handled as
+  // usual. Click the open lid (or the tray round the CD) to close it.
+  //
+  // Layers, back to front, in the picture's own box:
+  //   tray 0, (platform 0), CD shadow 1, CD 2, click wave 3, lid 4, spine 5.
+  const CASE_OPEN_DEG = 180; // the lid always opens all the way, to lie flat beside the case
+  const CASE_PERSPECTIVE = 2000; // px: the eye's distance from the case
+  // Classic symbols, turned to run down the spine: next points up, previous points down.
+  const ICONS = {
+    next: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.6" y="2.4" width="10.8" height="2.4" rx=".6"/><path d="M2.6 13.6h10.8L8 5.8z"/></svg>',
+    prev: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.6" y="11.2" width="10.8" height="2.4" rx=".6"/><path d="M2.6 2.4h10.8L8 10.2z"/></svg>',
+    playpause:
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><path class="pp-play" d="M1.4 3.2v9.6L7.6 8z"/>' +
+      '<g class="pp-pause"><rect x="9" y="3.2" width="2.2" height="9.6" rx=".5"/><rect x="12.6" y="3.2" width="2.2" height="9.6" rx=".5"/></g></svg>',
+  };
+  const kase = {
+    tray: null, lidWrap: null, lid: null, spine: null, playBtn: null,
+    p: 0, // how open the lid is: 0 shut, 1 open
+    open: false, // fully open, so the CD may be touched
+    anim: null, raf: 0,
+    key: "", // the playlist whose case this is
+    remember: { key: "", open: false }, // survives Spotify redrawing the header
+    flex: null, // the cover's item in the header row
+    text: null, // the header's text beside it, slid over to make room
+    room: null, // how far the text slides: with the case shut, and open
+    g: null, // the case's size
+    down: null, // the spine button being pressed
+    drag: null, // the lid being pushed open by its groove
+    v: 0, // the lid's speed, in lid-turns per second
+    tq: null, // how far the header's text has slid (0 shut .. 1 open)
+  };
+
+  const caseWanted = () => S.enabled && S.cdcase && document.body.classList.contains("cd-fy-header");
+  // The case is there and shut (or still moving): the CD inside can't be touched.
+  const caseLocked = () => !!kase.lid && !kase.open;
+  const caseUi = (t) => !!(t && t.closest && t.closest("#cd-fy-tray, #cd-fy-lidwrap, #cd-fy-spine"));
+
+  function caseBuild() {
+    const parent = stage.parent;
+    kase.tray = layer(
+      "cd-fy-tray",
+      '<div class="cdfy-frame"></div><div class="cdfy-recess"></div><div class="cdfy-latch"></div>' +
+        '<div class="cdfy-clip" data-at="top-hinge"></div><div class="cdfy-clip" data-at="top-far"></div><div class="cdfy-clip" data-at="bottom-hinge"></div>'
+    );
+    kase.lidWrap = layer(
+      "cd-fy-lidwrap",
+      '<div id="cd-fy-lid" aria-label="CD case lid">' +
+        '<div class="cdfy-wall cdfy-wall-top"></div><div class="cdfy-wall cdfy-wall-bottom"></div><div class="cdfy-wall cdfy-wall-side"></div>' +
+        '<div class="cdfy-face" role="button" aria-label="Open the CD case"></div>' +
+        '<div class="cdfy-groove" title="Push up to open"></div>' +
+        "</div>"
+    );
+    kase.lid = kase.lidWrap.firstChild;
+    kase.spine = layer(
+      "cd-fy-spine",
+      `<button type="button" class="cdfy-btn" data-act="next" aria-label="Next track">${ICONS.next}</button>` +
+        `<button type="button" class="cdfy-btn cdfy-play" data-act="play" aria-label="Play / pause">${ICONS.playpause}</button>` +
+        `<button type="button" class="cdfy-btn" data-act="prev" aria-label="Previous track">${ICONS.prev}</button>`
+    );
+    kase.playBtn = kase.spine.querySelector(".cdfy-play");
+    // Keyboard: a focused button works with Enter / Space.
+    kase.spine.addEventListener("click", (e) => {
+      const b = e.target.closest && e.target.closest(".cdfy-btn");
+      if (b && e.detail === 0) caseAct(b);
+    });
+    parent.prepend(kase.tray);
+    parent.append(kase.lidWrap, kase.spine);
+    kase.key = fitKey();
+    const was = kase.remember.key === kase.key && kase.remember.open;
+    // A case for a newly opened playlist fades in (not when Spotify merely redraws the header).
+    if (kase.remember.key !== kase.key) {
+      [kase.tray, kase.lidWrap, kase.spine].forEach((n) => n.classList.add("cdfy-in"));
+      setTimeout(() => [kase.tray, kase.lidWrap, kase.spine].forEach((n) => n && n.classList.remove("cdfy-in")), 520);
+      kase.textIn = true;
+      kase.remember = { key: kase.key, open: false };
+    }
+    kase.v = 0;
+    kase.tq = null;
+    kase.p = was ? 1 : 0;
+    kase.open = was;
+    caseWrite();
+    casePlay();
+    // The header's text (type, title, owner, song count) sits beside the cover. To make room
+    // for the case it is slid over, never squeezed: the cover's own box keeps its size.
+    // The header row is the nearest box round the cover that also holds the header's text
+    // (Spotify wraps the picture in boxes of its own, so it isn't simply the picture's parent).
+    const TEXT_SEL = ".main-entityHeader-headerText, .main-entityHeader-title, [data-testid='entityTitle'], h1";
+    let f = parent;
+    let found = false;
+    for (let a = parent, i = 0; a && a.parentElement && a.parentElement !== document.body && i < 8; a = a.parentElement, i++) {
+      const up = a.parentElement;
+      if (Array.from(up.children).some((c) => c !== a && (c.matches(TEXT_SEL) || c.querySelector(TEXT_SEL)))) {
+        f = a;
+        found = true;
+        break;
+      }
+    }
+    kase.flex = f;
+    // Above the header's text, whose box reaches under the spine and the open lid (it would
+    // catch the clicks meant for the spine's buttons).
+    kase.lift = { z: f.style.zIndex, pos: f.style.position };
+    f.style.zIndex = "3";
+    if (getComputedStyle(f).position === "static") f.style.position = "relative";
+    // The text's empty box slides past the header's right edge: trim it there, so the
+    // page doesn't scroll sideways (top and bottom stay open for the case).
+    const row = found ? f.parentElement : null;
+    kase.row = row ? { el: row, ox: row.style.overflowX } : null;
+    if (row) row.style.overflowX = "clip";
+    kase.text = [];
+    for (let n = found ? f.nextElementSibling : null; n; n = n.nextElementSibling) {
+      kase.text.push({ el: n, tf: n.style.transform, to: n.style.transformOrigin, wc: n.style.willChange, tr: n.style.transition, left: 0 });
+    }
+  }
+
+  function caseTeardown() {
+    if (kase.raf) cancelAnimationFrame(kase.raf);
+    [kase.tray, kase.lidWrap, kase.spine].forEach((n) => n && n.remove());
+    if (kase.row) kase.row.el.style.overflowX = kase.row.ox;
+    if (kase.flex && kase.lift) {
+      kase.flex.style.zIndex = kase.lift.z;
+      kase.flex.style.position = kase.lift.pos;
+    }
+    (kase.text || []).forEach((t) => {
+      t.el.style.transform = t.tf;
+      t.el.style.transition = t.tr;
+      t.el.style.transformOrigin = t.to;
+      t.el.style.willChange = t.wc;
+    });
+    Object.assign(kase, { lift: null, row: null, text: null, room: null, g: null, tray: null, lidWrap: null, lid: null, spine: null, playBtn: null, p: 0, open: false, anim: null, raf: 0, flex: null, down: null, drag: null, v: 0, tq: null });
+  }
+
+  // Size and place the case round the CD.
+  function casePlace(cx, cy, R) {
+    if (!kase.tray) return;
+    const D = 2 * R;
+    const m = Math.max(8, Math.round(D * 0.065)); // tray margin round the CD
+    const sw = Math.min(38, Math.max(26, Math.round(D * 0.125))); // spine width
+    const H = D + 2 * m;
+    const x = cx - R - m;
+    const y = cy - R - m;
+    const put = (box, l, t, w, h) => {
+      box.style.setProperty("left", l.toFixed(2) + "px", "important");
+      box.style.setProperty("top", t.toFixed(2) + "px", "important");
+      box.style.setProperty("width", w.toFixed(2) + "px", "important");
+      box.style.setProperty("height", h.toFixed(2) + "px", "important");
+    };
+    put(kase.tray, x, y, H + sw, H);
+    put(kase.lidWrap, x, y, H + sw, H);
+    put(kase.spine, x + H, y, sw, H);
+    // The eye sits over the CD's centre.
+    kase.lidWrap.style.setProperty("perspective-origin", `${(R + m).toFixed(1)}px 50%`, "important");
+    kase.spine.style.setProperty("--btn", Math.round(Math.min(sw - 8, 24)) + "px");
+    kase.tray.style.setProperty("--recess", (R + 2).toFixed(1) + "px");
+    kase.tray.style.setProperty("--cdx", (R + m).toFixed(1) + "px");
+    kase.tray.style.setProperty("--sw", sw + "px");
+    // The clips along the tray's edges: two beside the spine, one in the far corner.
+    const cw = Math.round(H * 0.13);
+    kase.tray.querySelectorAll(".cdfy-clip").forEach((c) => {
+      const at = c.getAttribute("data-at");
+      c.style.width = cw + "px";
+      c.style.left = (at === "top-far" ? 12 : H - cw - 18) + "px";
+      c.style.top = at.startsWith("top") ? "1px" : "auto";
+      c.style.bottom = at.startsWith("bottom") ? "1px" : "auto";
+    });
+    kase.g = { W: H + sw, hinge: H + sw - (R + m), m, sw };
+    caseMeasure();
+    caseRoom();
+  }
+
+  // Where the header's text has to go. Shut, just clear of the spine; open, over at the
+  // far right of the header, clear of the lid lying flat (made a little smaller only if
+  // it is too wide to fit there). Measured with the text in its own place.
+  function caseMeasure() {
+    const items = kase.text;
+    const box = kase.flex && kase.flex.parentElement;
+    if (!items || !items.length || !box || !kase.g) return (kase.room = null);
+    const glide = items.map((t) => t.el.style.transition);
+    items.forEach((t) => {
+      t.el.style.transition = "none";
+      t.el.style.transform = "none";
+    });
+    let L = Infinity;
+    let Rt = -Infinity;
+    items.forEach((t) => {
+      t.left = t.el.getBoundingClientRect().left;
+      const w = document.createTreeWalker(t.el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT);
+      let n;
+      let count = 0;
+      while ((n = w.nextNode()) && count++ < 600) {
+        let r = null;
+        if (n.nodeType === 3) {
+          if (!n.textContent.trim()) continue;
+          const rg = document.createRange();
+          rg.selectNodeContents(n);
+          r = rg.getBoundingClientRect();
+        } else if (/^(img|svg|button)$/i.test(n.tagName)) {
+          r = n.getBoundingClientRect();
+        }
+        if (r && r.width > 0 && r.height > 0) {
+          L = Math.min(L, r.left);
+          Rt = Math.max(Rt, r.right);
+        }
+      }
+    });
+    const back = () => items.forEach((t, i) => {
+      t.el.style.transform = kase.lastTf || "";
+      t.el.style.transition = glide[i];
+    });
+    if (!isFinite(L)) {
+      back();
+      return (kase.room = null);
+    }
+    const br = box.getBoundingClientRect();
+    const right = br.right - (parseFloat(getComputedStyle(box).paddingRight) || 0);
+    const spineR = kase.spine.getBoundingClientRect().right;
+    const lidR = spineR + kase.g.W;
+    const closed = Math.max(0, spineR + 30 - L); // a little air past the spine
+    const open = Math.max(closed, right - Rt);
+    const scale = Math.max(0.45, Math.min(1, (right - (lidR + 20)) / Math.max(1, Rt - L)));
+    kase.room = { closed, open, scale };
+    // Straight back where it was, before the page draws, so measuring never shows.
+    items.forEach((t) => (t.el.style.transform = kase.lastTf || ""));
+    items.forEach((t, i) => (t.el.style.transition = glide[i]));
+    // Shrinking (if it must) keeps the text's right edge in place.
+    items.forEach((t) => {
+      t.el.style.transformOrigin = `${(Rt - t.left).toFixed(1)}px 50%`;
+      t.el.style.willChange = "transform";
+    });
+  }
+
+  // Slide the header's text along with the lid: a touch ahead of it, so the lid never covers it.
+  function caseRoom() {
+    const r = kase.room;
+    if (!r || !kase.text) return;
+    const p = Math.min(1, Math.max(0, kase.p));
+    let q = 1 - (1 - p) * (1 - p);
+    // While the lid swings on its own the text only ever moves one way, so the lid's
+    // little landing bounce doesn't make it twitch.
+    const a = kase.anim;
+    if (a && a.phys && kase.tq !== null) q = a.to ? Math.max(kase.tq, q) : Math.min(kase.tq, q);
+    kase.tq = q;
+    // The first time (a page just opened) the text glides aside instead of jumping.
+    if (kase.textIn) {
+      kase.textIn = false;
+      kase.text.forEach((t) => (t.el.style.transition = "transform 0.42s cubic-bezier(0.22, 0.8, 0.24, 1)"));
+      setTimeout(() => (kase.text || []).forEach((t) => (t.el.style.transition = t.tr || "")), 480);
+    }
+    const shift = r.closed + (r.open - r.closed) * q;
+    const sc = 1 + (r.scale - 1) * q;
+    const tf = `translateX(${shift.toFixed(2)}px)` + (sc < 0.9995 ? ` scale(${sc.toFixed(4)})` : "");
+    kase.lastTf = tf;
+    kase.text.forEach((t) => {
+      if (t.el.style.transform !== tf) t.el.style.transform = tf;
+    });
+  }
+
+  // Draw the lid at kase.p.
+  function caseWrite() {
+    const lid = kase.lid;
+    if (!lid) return;
+    const p = kase.p;
+    const deg = p * CASE_OPEN_DEG;
+    lid.style.transform = `rotateY(${deg.toFixed(3)}deg)`;
+    // The light runs across the glass as it turns, and its shadow on the tray deepens as it rises.
+    lid.style.setProperty("--sweep", (78 - 62 * Math.min(1, Math.max(0, p))).toFixed(2) + "%");
+    // Its shadow grows as it rises off the case and fades as it comes down flat on the other side.
+    lid.style.setProperty("--lift", Math.max(0, Math.sin(Math.min(1, Math.max(0, p)) * Math.PI)).toFixed(3));
+    const shut = p < 0.001;
+    lid.classList.toggle("is-shut", shut);
+    lid.classList.toggle("is-open", kase.open);
+    const face = lid.querySelector(".cdfy-face");
+    if (face) face.setAttribute("aria-label", kase.open ? "Close the CD case" : "Open the CD case");
+    if (kase.tray) kase.tray.classList.toggle("is-open", kase.open);
+    caseRoom();
+  }
+
+  // The lid moves on a critically damped spring, never on a timed curve: whatever it is
+  // doing (swinging, pushed by hand, let go, sent back the other way halfway) it carries
+  // its speed on, so it never jerks, and it glides into its stop (flat open beside the
+  // case, or shut on it) arriving with no speed at all: no bump, no bounce.
+  const LID_RATE = { open: 12, close: 13 }; // 1/s: how briskly it swings (higher is quicker)
+  const LID_EASE_IN = 12; // 1/s: how quickly the pull builds up, so even the first moment of a swing is gentle
+  const LID_FOLLOW = 24; // 1/s: how closely it follows a hand pushing it (a spring too, so it eases after the hand)
+  let caseLast = 0;
+
+  function caseKick() {
+    if (kase.raf) return;
+    caseLast = performance.now();
+    kase.raf = requestAnimationFrame(caseFrame);
+  }
+
+  function caseSet(open) {
+    if (!kase.lid) return;
+    const to = open ? 1 : 0;
+    if (kase.anim && kase.anim.phys && kase.anim.to === to) return;
+    if (!kase.anim && !kase.drag && kase.p === to) return;
+    kase.remember = { key: kase.key, open };
+    if (!open) {
+      // Shutting: the CD can't be touched from the first moment, and a lifted one drops back.
+      kase.open = false;
+      tiltSettle();
+      if (activeScratch) window.dispatchEvent(new MouseEvent("mouseup"));
+    }
+    if (kase.anim && !kase.anim.phys) kase.p = kase.anim.from; // a rattle in progress
+    // The spring pulls toward a goal that itself glides from where the lid is to the stop.
+    kase.anim = { phys: true, to, snapped: false, g: kase.p };
+    caseWrite();
+    caseKick();
+  }
+
+  // The lid has (all but) reached a stop: flat open beside the case, or shut on it.
+  function caseLanded(stop) {
+    const a = kase.anim;
+    if (stop === 1 && !kase.open) {
+      kase.open = true;
+      // Already under the cursor: lift the CD without waiting for the mouse to move.
+      if (lastPtr) setTimeout(() => lastPtr && tiltPointer(lastPtr.x, lastPtr.y, lastPtr.target), 0);
+    }
+    if (stop === 0 && a && !a.snapped) {
+      a.snapped = true;
+      caseSnap();
+    }
+  }
+
+  // One spring step: move p toward goal at rate w (critically damped), in small steps.
+  function lidSpring(goal, w, dt) {
+    const n = Math.max(1, Math.ceil(dt / 0.006));
+    const h = dt / n;
+    for (let i = 0; i < n; i++) {
+      kase.v += (w * w * (goal - kase.p) - 2 * w * kase.v) * h;
+      kase.p += kase.v * h;
+    }
+    if (kase.p > 1) {
+      kase.p = 1;
+      if (kase.v > 0) kase.v = 0;
+    } else if (kase.p < 0) {
+      kase.p = 0;
+      if (kase.v < 0) kase.v = 0;
+    }
+  }
+
+  function caseFrame(now) {
+    kase.raf = 0;
+    if (!kase.lid) return;
+    const dt = Math.min(0.034, Math.max(0, (now - caseLast) / 1000));
+    caseLast = now;
+    const a = kase.anim;
+    let more = false;
+    if (kase.drag) {
+      // Pushed by hand: the lid eases after the hand, so it picks up speed smoothly.
+      lidSpring(kase.drag.want, LID_FOLLOW, dt);
+      more = true;
+    } else if (a && a.phys) {
+      a.g += (a.to - a.g) * (1 - Math.exp(-LID_EASE_IN * dt));
+      lidSpring(a.g, a.to ? LID_RATE.open : LID_RATE.close, dt);
+      const left = Math.abs(a.to - kase.p);
+      // Nearly flat open: the CD can be touched already, without waiting for the last degree.
+      if (a.to === 1 && left < 0.02) caseLanded(1);
+      if (left < 0.0015 && Math.abs(kase.v) < 0.03) {
+        kase.p = a.to;
+        kase.v = 0;
+        kase.anim = null;
+        caseLanded(a.to);
+      } else more = true;
+    } else if (a) {
+      // The rattle of a latched lid: a small lift and back down.
+      const t = Math.min(1, (now - a.t0) / a.dur);
+      const sn = Math.sin(Math.PI * t);
+      kase.p = a.from + a.bump * sn * sn * (1 - 0.35 * t);
+      if (t >= 1) {
+        kase.p = a.from;
+        kase.anim = null;
+        caseSnap();
+      } else more = true;
+    }
+    caseWrite();
+    if (more) kase.raf = requestAnimationFrame(caseFrame);
+  }
+
+  // The little click of a case shutting: the whole case gives a tiny bump.
+  function caseSnap() {
+    [kase.tray, kase.lidWrap, kase.spine].forEach((n) => {
+      if (!n) return;
+      n.classList.remove("cdfy-snap");
+      void n.offsetWidth;
+      n.classList.add("cdfy-snap");
+    });
+  }
+
+  // The spine's buttons.
+  function caseAct(btn) {
+    const act = btn.getAttribute("data-act");
+    const P = Spicetify.Player;
+    // Spicetify's player first; if that fails, press Spotify's own control.
+    const run = (fn, testid) => {
+      try {
+        if (typeof fn === "function") return fn(), true;
+      } catch (e) {
+        console.warn("[cd-fy] player call failed, using Spotify's button", e);
+      }
+      const b = document.querySelector(`[data-testid="${testid}"]`);
+      if (b) b.click();
+      return !!b;
+    };
+    if (act === "next") run(P.next && P.next.bind(P), "control-button-skip-forward");
+    else if (act === "prev") run(P.back && P.back.bind(P), "control-button-skip-back");
+    else if (act === "play") {
+      const was = isPlaying();
+      run(P.togglePlay && P.togglePlay.bind(P), "control-button-playpause");
+      // Show the new state at once; tick() confirms it.
+      if (kase.playBtn) kase.playBtn.classList.toggle("is-playing", !was);
+      setTimeout(() => tick(true), 120);
+    }
+  }
+
+  function casePlay() {
+    if (kase.playBtn) kase.playBtn.classList.toggle("is-playing", isPlaying());
+  }
+
+  // From sheenSync: put the case round the header CD, or take it away.
+  function caseSync(cx, cy, R) {
+    const want = caseWanted() && stage.rec;
+    if (kase.tray && (!want || !kase.tray.isConnected || kase.tray.parentElement !== stage.parent || kase.key !== fitKey())) caseTeardown();
+    if (!want) return;
+    if (!kase.tray) caseBuild();
+    casePlace(cx, cy, R);
+    casePlay();
+  }
+
+  // Presses on the case: the lid and tray open and close it, the spine's buttons press in.
+  window.addEventListener(
+    "mousedown",
+    (e) => {
+      if (e.button !== 0 || !caseUi(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      lastDiscPress = performance.now(); // and swallow the click that follows
+      const btn = e.target.closest(".cdfy-btn");
+      if (btn) {
+        kase.down = btn;
+        btn.classList.add("is-down");
+        return;
+      }
+      const opening = kase.open || (kase.anim && kase.anim.to === 1);
+      if (e.target.closest("#cd-fy-lid")) {
+        if (opening) caseSet(false);
+        else if (e.target.closest(".cdfy-groove")) caseGrab(e);
+        else caseNudge();
+      } else if (e.target.closest("#cd-fy-tray") && (kase.open || (kase.anim && kase.anim.to === 1))) caseSet(false);
+    },
+    true
+  );
+  window.addEventListener(
+    "mouseup",
+    (e) => {
+      const btn = kase.down;
+      if (!btn) return;
+      kase.down = null;
+      btn.classList.remove("is-down");
+      // Pressed and let go over the same button: that's a click.
+      const over = document.elementFromPoint(e.clientX, e.clientY);
+      if (over && btn.contains(over)) caseAct(btn);
+    },
+    true
+  );
+
+  // The latch. Shut, the lid only opens from its thumb groove: press there and push
+  // the lid up and over (to the right, or upward), and its edge follows your hand; let
+  // go past about a third of the way and it swings the rest of the way open, otherwise
+  // it falls back shut. A plain click on the groove unlatches it and swings it open.
+  // A press anywhere else on the shut lid just rattles it against the latch, and the
+  // groove glows to show where to push.
+  const CASE_LATCH_PX = 6; // the push the latch takes before it lets go
+  function caseGrab(e) {
+    if (kase.anim && !kase.anim.phys) kase.p = kase.anim.from;
+    kase.anim = null;
+    kase.drag = { x: e.clientX, y: e.clientY, p0: kase.p, moved: false, want: kase.p };
+    kase.lid.classList.add("is-grabbed");
+    document.body.style.cursor = "grabbing";
+    caseKick();
+  }
+  function caseUnlatch() {
+    const l = kase.tray && kase.tray.querySelector(".cdfy-latch");
+    if (!l) return;
+    l.classList.add("cdfy-unlatch");
+    setTimeout(() => l.classList.remove("cdfy-unlatch"), 160);
+  }
+  function caseNudge() {
+    if (kase.anim || kase.drag) return;
+    kase.anim = { from: kase.p, t0: performance.now(), dur: 420, bump: 0.03 };
+    caseKick();
+    const g = kase.lid && kase.lid.querySelector(".cdfy-groove");
+    if (g) {
+      g.classList.remove("cdfy-hint");
+      void g.offsetWidth;
+      g.classList.add("cdfy-hint");
+      setTimeout(() => g.classList.remove("cdfy-hint"), 1900);
+    }
+  }
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      const d = kase.drag;
+      if (!d || !kase.g || !kase.lid) return;
+      const push = Math.max(e.clientX - d.x, d.y - e.clientY);
+      let p;
+      if (push < CASE_LATCH_PX) {
+        p = d.p0 + 0.008 * (Math.max(0, push) / CASE_LATCH_PX); // the latch holding
+      } else {
+        if (!d.moved) {
+          d.moved = true;
+          caseUnlatch();
+        }
+        // The lid's open edge stays under the cursor as it turns over.
+        const c = Math.max(-1, Math.min(1, 1 - (push - CASE_LATCH_PX) / kase.g.W));
+        p = Math.max(d.p0 + 0.008, Math.acos(c) / Math.PI);
+      }
+      d.want = Math.max(0, Math.min(1, p));
+      caseKick();
+    },
+    true
+  );
+  window.addEventListener(
+    "mouseup",
+    () => {
+      const d = kase.drag;
+      if (!d) return;
+      kase.drag = null;
+      if (kase.lid) kase.lid.classList.remove("is-grabbed");
+      document.body.style.cursor = "";
+      // Let go: the lid carries on with the speed the hand gave it. A flick counts as well
+      // as a long push.
+      const ahead = kase.p + kase.v * 0.15;
+      if (!d.moved) {
+        caseUnlatch();
+        caseSet(true);
+      } else caseSet(ahead > 0.33);
+    },
+    true
+  );
+
+  // The glass catches the light where the cursor is.
+  document.addEventListener(
+    "mousemove",
+    (e) => {
+      const lid = kase.lid;
+      if (!lid || !kase.lidWrap) return;
+      const b = kase.lidWrap.getBoundingClientRect();
+      const inside = e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom;
+      lid.classList.toggle("is-hover", inside && !kase.open);
+      if (!inside) return;
+      lid.style.setProperty("--gx", (((e.clientX - b.left) / b.width) * 100).toFixed(1) + "%");
+      lid.style.setProperty("--gy", (((e.clientY - b.top) / b.height) * 100).toFixed(1) + "%");
+    },
+    { passive: true }
+  );
+  Spicetify.Player.addEventListener("onplaypause", () => setTimeout(casePlay, 30));
+
 
   // ------------------------------ main loop --------------------------------
   let headerInUse = false;
@@ -1875,7 +2864,7 @@
     // trimmed to the disc in its picture; otherwise it's left as Spotify draws it.
     const onPlaylist = isPlaylistPage();
     const hdr = headerEls();
-    const inUse = S.enabled && onPlaylist && (S.tilt || S.wave || S.platform || hdr.some((el) => running.has(el)));
+    const inUse = S.enabled && onPlaylist && (S.tilt || S.wave || S.platform || S.cdcase || hdr.some((el) => running.has(el)));
     if (inUse !== headerInUse) {
       headerInUse = inUse;
       document.body.classList.toggle("cd-fy-header", inUse);
@@ -2023,6 +3012,11 @@
         active: S.platform,
         isTitle: false,
       },
+      cdcase: {
+        text: "cd case (playlist page)",
+        active: S.cdcase,
+        isTitle: false,
+      },
       whereLabel: {
         text: "where to spin.",
         active: false,
@@ -2163,6 +3157,7 @@
     tilt: "hover tilt",
     wave: "click wave",
     platform: "platform",
+    cdcase: "cd case",
     header: "playlist header",
     sidebar: "sidebar",
     everywhere: "home & shelves",
@@ -2208,6 +3203,7 @@
         mk("tilt",          () => toggle("tilt")),
         mk("wave",          () => toggle("wave")),
         mk("platform",      () => toggle("platform")),
+        mk("cdcase",        () => toggle("cdcase")),
         sep("whereLabel"),
         mk("header",        () => toggle("header")),
         mk("sidebar",       () => toggle("sidebar")),
@@ -2291,6 +3287,7 @@
         shadow: stage.shadow ? stage.shadow.style.transform + " " + stage.shadow.style.filter : "",
         zoom: ZOOM_OK,
       },
+      cdCase: { shown: !!kase.tray, open: kase.open, lid: +kase.p.toFixed(3) },
       wave: { active: wave.active, drops: wave.drops.length, shiftPx: +wave.peak.toFixed(3), discEdge: wave.el ? vinylEdge.get(wave.src) : null },
     };
     console.log(info);
