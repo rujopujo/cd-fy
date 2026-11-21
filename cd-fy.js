@@ -254,7 +254,7 @@
       border-radius: 50% !important;
       box-sizing: border-box !important;
     }
-    /* The platform: three stacked black metal plates whose bare stainless-steel edges
+    /* The platform: three stacked black metal plates whose bare brushed-brass edges
        step out from the CD's own edge, like the bezel round a DJ deck's jog wheel */
     #cd-fy-platform {
       z-index: 0;
@@ -263,20 +263,20 @@
     #cd-fy-platform .cdfy-plate {
       position: absolute;
       border-radius: 50%;
-      /* brushed stainless: brightest along the line to the light (upper left, lower right) */
+      /* brushed brass: brightest along the line to the light (upper left, lower right) */
       background: conic-gradient(
         from 0deg,
-        #8d9198 0deg,
-        #d5d8dc 30deg,
-        #878b92 72deg,
-        #b8bbc0 108deg,
-        #f4f5f7 135deg,
-        #9a9ea5 165deg,
-        #6a6e75 210deg,
-        #a8acb2 250deg,
-        #f6f7f8 315deg,
-        #b4b7bc 343deg,
-        #8d9198 360deg
+        #9a7a45 0deg,
+        #d9bd7c 30deg,
+        #8f6f3c 72deg,
+        #c2a263 108deg,
+        #f6e5b0 135deg,
+        #a88848 165deg,
+        #6e5428 210deg,
+        #b39352 250deg,
+        #f8e9b8 315deg,
+        #c4a566 343deg,
+        #9a7a45 360deg
       );
       /* a hairline where each plate meets the one below, and a bevel lit from the upper left */
       box-shadow:
