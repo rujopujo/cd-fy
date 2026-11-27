@@ -330,9 +330,8 @@
       pointer-events: auto !important;
       border-radius: 3px 0 0 3px !important;
       /* Clear glass: whatever is behind the header shows through, only a touch softened */
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02) 40%, rgba(255, 255, 255, 0.05)) !important;
-      -webkit-backdrop-filter: blur(1.5px) saturate(1.05);
-      backdrop-filter: blur(1.5px) saturate(1.05);
+      /* (No backdrop blur: redrawing it every frame under a spinning CD made the case stutter.) */
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.025) 40%, rgba(255, 255, 255, 0.055)) !important;
       /* Lit from the upper left: a bright bevel on the top and left edges, a shaded one on the
          bottom and right, and the case's thickness showing as clear glass walls below and to the right */
       box-shadow:
@@ -347,8 +346,19 @@
         calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.07),
         calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.22),
         calc(7px * var(--ex, 1)) calc(7px * var(--ey, 1)) 0 rgba(0, 0, 0, 0.12),
-        calc(8px + 6px * var(--hl, 0)) calc(10px + 14px * var(--hl, 0)) calc(4px + 10px * var(--hl, 0)) rgba(0, 0, 0, calc(0.2 - 0.06 * var(--hl, 0))),
-        calc(14px + 10px * var(--hl, 0)) calc(20px + 26px * var(--hl, 0)) calc(34px + 26px * var(--hl, 0)) rgba(0, 0, 0, calc(0.3 - 0.06 * var(--hl, 0)));
+        8px 10px 4px rgba(0, 0, 0, 0.2),
+        14px 20px 34px rgba(0, 0, 0, 0.3);
+    }
+    /* The case's shadow when it is picked up: its own soft layer under the case, which
+       only slides and fades (never redrawn), so a lifted case moves smoothly */
+    #cd-fy-caseshade {
+      z-index: 0;
+      background: rgba(0, 0, 0, 0.5) !important;
+      border-radius: 8px !important;
+      filter: blur(18px);
+      opacity: 0;
+      transform: translate(10px, 16px);
+      will-change: transform, opacity;
     }
     #cd-fy-tray.is-open {
       cursor: pointer;
@@ -423,9 +433,7 @@
         radial-gradient(16px 16px at calc(100% - 3px) 3px, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 70%),
         radial-gradient(16px 16px at 3px calc(100% - 3px), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%),
         radial-gradient(18px 18px at calc(100% - 3px) calc(100% - 3px), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%),
-        linear-gradient(128deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 30%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, 0.04) 100%);
-      -webkit-backdrop-filter: blur(0.35px) saturate(1.06) brightness(1.03);
-      backdrop-filter: blur(0.35px) saturate(1.06) brightness(1.03);
+        linear-gradient(128deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.025) 30%, rgba(255, 255, 255, 0.01) 55%, rgba(255, 255, 255, 0.045) 100%);
       /* thick glass: a bright outer edge, a bevel lit on the top left and shaded on the bottom
          right, and the lid's raised lip a few pixels in, bevelled the other way */
       box-shadow:
@@ -603,8 +611,8 @@
         calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 #09090a,
         calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 #070708,
         calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 #040405,
-        calc(7px + 6px * var(--hl, 0)) calc(8px + 14px * var(--hl, 0)) calc(3px + 10px * var(--hl, 0)) rgba(0, 0, 0, 0.35),
-        calc(14px + 10px * var(--hl, 0)) calc(20px + 26px * var(--hl, 0)) calc(34px + 26px * var(--hl, 0)) rgba(0, 0, 0, 0.42);
+        7px 8px 3px rgba(0, 0, 0, 0.35),
+        14px 20px 34px rgba(0, 0, 0, 0.42);
     }
     #cd-fy-spine .cdfy-btn {
       all: unset;
@@ -771,24 +779,45 @@
       outline: 2px solid #ffffff;
       outline-offset: 2px;
     }
-    /* While the case is being looked over, a light runs along the pill */
+    /* While the case is being looked over, a light runs along the pill (moved, not repainted) */
+    .cdfy-inspect {
+      position: relative;
+      overflow: hidden;
+    }
+    .cdfy-inspect::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(105deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.34) 50%, rgba(255, 255, 255, 0) 80%);
+      transform: translateX(-110%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
     .cdfy-inspect.is-busy {
       cursor: default;
-      background:
-        linear-gradient(105deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.32) 45%, rgba(255, 255, 255, 0) 60%) 0 0 / 260% 100%,
-        linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 48%, rgba(255, 255, 255, 0.16)),
-        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 44%, transparent);
-      animation: cdfy-busy 1.6s linear infinite;
+    }
+    .cdfy-inspect.is-busy::after {
+      opacity: 1;
+      animation: cdfy-busy 1.7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    }
+    .cdfy-inspect.cdfy-warm::after {
+      opacity: 0.001;
+      animation: cdfy-busy 1.7s linear infinite;
     }
     @keyframes cdfy-busy {
-      from { background-position: 130% 0, 0 0, 0 0; }
-      to { background-position: -130% 0, 0 0, 0 0; }
+      from { transform: translateX(-110%); }
+      to { transform: translateX(110%); }
     }
     /* Being inspected: the case is lifted off the page, so nothing in it takes a click */
     .cdfy-inspecting #cd-fy-lid .cdfy-face,
     .cdfy-inspecting #cd-fy-lid .cdfy-groove,
     .cdfy-inspecting #cd-fy-tray {
       cursor: default !important;
+    }
+    /* The glint follows the case exactly while it is turned in the hand */
+    .cdfy-inspecting #cd-fy-lid {
+      transition: none !important;
     }
   `;
   document.head.appendChild(style);
@@ -2436,12 +2465,18 @@
         `<button type="button" class="cdfy-btn" data-act="prev" aria-label="Previous track">${ICONS.prev}</button>`
     );
     kase.playBtn = kase.spine.querySelector(".cdfy-play");
+    // Ready to be picked up: the case's box gets its own layer now, so an inspection
+    // doesn't start with a stall while one is made.
+    kase.wc = parent.style.willChange;
+    parent.style.willChange = "transform";
+    inspectWarm();
     // Keyboard: a focused button works with Enter / Space.
     kase.spine.addEventListener("click", (e) => {
       const b = e.target.closest && e.target.closest(".cdfy-btn");
       if (b && e.detail === 0) caseAct(b);
     });
-    parent.prepend(kase.tray);
+    kase.shade = layer("cd-fy-caseshade");
+    parent.prepend(kase.shade, kase.tray);
     parent.append(kase.lidWrap, kase.spine);
     kase.key = fitKey();
     const was = kase.remember.key === kase.key && kase.remember.open;
@@ -2498,7 +2533,9 @@
     insp.btn = null;
     insp.tint = "";
     if (kase.raf) cancelAnimationFrame(kase.raf);
-    [kase.tray, kase.lidWrap, kase.spine].forEach((n) => n && n.remove());
+    if (stage.parent && kase.tray) stage.parent.style.willChange = kase.wc || "";
+    [kase.shade, kase.tray, kase.lidWrap, kase.spine].forEach((n) => n && n.remove());
+    kase.shade = null;
     if (kase.row) kase.row.el.style.overflowX = kase.row.ox;
     if (kase.flex && kase.lift) {
       kase.flex.style.zIndex = kase.lift.z;
@@ -2529,6 +2566,7 @@
       box.style.setProperty("height", h.toFixed(2) + "px", "important");
     };
     put(kase.tray, x, y, H + sw, H);
+    if (kase.shade) put(kase.shade, x, y, H + sw, H);
     put(kase.lidWrap, x, y, H + sw, H);
     put(kase.spine, x + H, y, sw, H);
     // The eye sits over the CD's centre.
@@ -2963,7 +3001,7 @@
   // to look along its bottom edge, and set back down. Its walls show as it turns. It
   // only happens with the case shut: pressed while the case is open, the lid swings
   // shut first and then the case is picked up. The CD keeps spinning inside.
-  const INSPECT_MS = 4800;
+  const INSPECT_MS = 5600;
   const INSPECT_PERSPECTIVE = 1400; // px
   // [time 0..1, tip (rotateX deg), turn (rotateY deg), roll (rotateZ deg), size, rise (px)]
   const INSPECT_KEYS = [
@@ -2979,24 +3017,52 @@
     '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6"/><path d="M10.2 10.2 14 14"/></svg>';
   const insp = { btn: null, on: false, t0: 0, raf: 0, queued: false, tint: "" };
 
-  // The pose at time t: a smooth curve through the keys (Catmull-Rom over their uneven
-  // times), starting and ending at rest with no speed, so it never jerks.
-  function inspectPose(t) {
+  // The pose at time t: a clamped cubic spline through the keys. Its speed and its
+  // acceleration both change smoothly (no little kinks as it passes a key), and it
+  // starts and ends at rest with no speed.
+  const INSPECT_SPLINE = (() => {
     const K = INSPECT_KEYS;
-    let i = 0;
-    while (i < K.length - 2 && t > K[i + 1][0]) i++;
-    const a = K[i];
-    const b = K[i + 1];
-    const h = b[0] - a[0];
-    const u = Math.min(1, Math.max(0, (t - a[0]) / h));
-    const u2 = u * u;
-    const u3 = u2 * u;
-    const slope = (j, c) => (j === 0 || j === K.length - 1 ? 0 : (K[j + 1][c] - K[j - 1][c]) / (K[j + 1][0] - K[j - 1][0]));
-    const out = [];
+    const n = K.length - 1;
+    const t = K.map((k) => k[0]);
+    const h = [];
+    for (let i = 0; i < n; i++) h.push(t[i + 1] - t[i]);
+    const M = [];
     for (let c = 1; c < 6; c++) {
-      out.push((2 * u3 - 3 * u2 + 1) * a[c] + (u3 - 2 * u2 + u) * h * slope(i, c) + (-2 * u3 + 3 * u2) * b[c] + (u3 - u2) * h * slope(i + 1, c));
+      const y = K.map((k) => k[c]);
+      // Second derivatives, from the tridiagonal system (Thomas algorithm); end slopes 0.
+      const A = [], B = [], C = [], D = [];
+      for (let i = 0; i <= n; i++) {
+        if (i === 0) {
+          A.push(0); B.push(2 * h[0]); C.push(h[0]); D.push(6 * ((y[1] - y[0]) / h[0]));
+        } else if (i === n) {
+          A.push(h[n - 1]); B.push(2 * h[n - 1]); C.push(0); D.push(6 * (0 - (y[n] - y[n - 1]) / h[n - 1]));
+        } else {
+          A.push(h[i - 1]); B.push(2 * (h[i - 1] + h[i])); C.push(h[i]);
+          D.push(6 * ((y[i + 1] - y[i]) / h[i] - (y[i] - y[i - 1]) / h[i - 1]));
+        }
+      }
+      for (let i = 1; i <= n; i++) {
+        const w = A[i] / B[i - 1];
+        B[i] -= w * C[i - 1];
+        D[i] -= w * D[i - 1];
+      }
+      const m = new Array(n + 1);
+      m[n] = D[n] / B[n];
+      for (let i = n - 1; i >= 0; i--) m[i] = (D[i] - C[i] * m[i + 1]) / B[i];
+      M.push({ y, m });
     }
-    return out;
+    return { t, h, M };
+  })();
+  function inspectPose(tt) {
+    const { t, h, M } = INSPECT_SPLINE;
+    let i = 0;
+    while (i < h.length - 1 && tt > t[i + 1]) i++;
+    const hi = h[i];
+    const a = t[i + 1] - tt;
+    const b = tt - t[i];
+    return M.map(({ y, m }) =>
+      (m[i] * a * a * a + m[i + 1] * b * b * b) / (6 * hi) + (y[i] / hi - (m[i] * hi) / 6) * a + (y[i + 1] / hi - (m[i + 1] * hi) / 6) * b
+    );
   }
 
   function inspectFrame(now) {
@@ -3011,22 +3077,53 @@
       "important"
     );
     // The case's walls: its thickness shows on whichever side turns toward you.
+    // (Set only on the tray and the spine, which draw them, so the rest of the case isn't restyled.)
     const T = 0.07 * (kase.g ? kase.g.W : 300);
     const sx = Math.sin((ry * Math.PI) / 180);
     const sy = Math.sin((rx * Math.PI) / 180);
-    box.style.setProperty("--ex", (1 - (sx * T) / 6).toFixed(3));
-    box.style.setProperty("--ey", (1 + (sy * T) / 6).toFixed(3));
-    // Lifted: its shadow falls further off and softer.
-    box.style.setProperty("--hl", Math.max(0, (s - 1) / 0.09).toFixed(3));
-    // The light runs over the glass as it turns.
+    const ex = (1 - (sx * T) / 6).toFixed(2);
+    const ey = (1 + (sy * T) / 6).toFixed(2);
+    [kase.tray, kase.spine].forEach((n) => {
+      if (!n) return;
+      if (n.style.getPropertyValue("--ex") !== ex) n.style.setProperty("--ex", ex);
+      if (n.style.getPropertyValue("--ey") !== ey) n.style.setProperty("--ey", ey);
+    });
+    // Lifted: its shadow falls further off, wider and fainter.
+    const hl = Math.max(0, (s - 1) / 0.09);
+    if (kase.shade) {
+      kase.shade.style.opacity = (0.6 * hl).toFixed(3);
+      kase.shade.style.transform = `translate(${(10 + 10 * hl).toFixed(2)}px, ${(16 + 22 * hl).toFixed(2)}px) scale(${(1 + 0.03 * hl).toFixed(4)})`;
+    }
+    // The light runs over the glass as it turns (written straight, not eased by the glint's transition).
     if (kase.lid) {
       kase.lid.style.setProperty("--gx", (30 + ry * 1.4).toFixed(1) + "%");
       kase.lid.style.setProperty("--gy", (20 - rx * 1.4).toFixed(1) + "%");
-      kase.lid.style.setProperty("--sweep", (78 + ry * 1.3).toFixed(2) + "%");
+      kase.lid.style.setProperty("--sweep", (78 + ry * 1.3).toFixed(1) + "%");
       kase.lid.classList.toggle("is-hover", t > 0.04 && t < 0.94);
     }
     if (t >= 1) return inspectStop();
     insp.raf = requestAnimationFrame(inspectFrame);
+  }
+
+  // The first time a case is drawn tilted in 3D the graphics card has to get ready for
+  // it, which stalls a frame or two. Do that once, unseen, soon after the case appears
+  // (a tilt of a thousandth of a degree, for two frames), so the real one starts smoothly.
+  let inspectWarmed = false;
+  function inspectWarm() {
+    if (inspectWarmed) return;
+    setTimeout(() => {
+      const box = stage.parent;
+      if (inspectWarmed || !box || !kase.tray || insp.on) return;
+      inspectWarmed = true;
+      box.style.setProperty("transform", `perspective(${INSPECT_PERSPECTIVE}px) rotateX(0.001deg) rotateY(0.001deg)`, "important");
+      if (insp.btn) insp.btn.classList.add("cdfy-warm");
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!insp.on && stage.parent === box) box.style.removeProperty("transform");
+          if (insp.btn) insp.btn.classList.remove("cdfy-warm");
+        })
+      );
+    }, 900);
   }
 
   function inspectStart() {
@@ -3050,10 +3147,9 @@
     const ox = (parseFloat(tr.style.left) || 0) + tr.offsetWidth / 2;
     const oy = (parseFloat(tr.style.top) || 0) + tr.offsetHeight / 2;
     box.style.setProperty("transform-origin", `${ox.toFixed(1)}px ${oy.toFixed(1)}px`, "important");
-    box.style.setProperty("will-change", "transform");
     insp.on = true;
     insp.t0 = performance.now();
-    document.body.classList.add("cdfy-inspecting");
+    box.classList.add("cdfy-inspecting");
     if (insp.btn) insp.btn.setAttribute("aria-disabled", "true");
     insp.raf = requestAnimationFrame(inspectFrame);
   }
@@ -3065,8 +3161,16 @@
     insp.on = false;
     insp.queued = false;
     const box = stage.parent;
-    if (box && was) ["transform", "transform-origin", "will-change", "--ex", "--ey", "--hl"].forEach((p) => box.style.removeProperty(p));
-    document.body.classList.remove("cdfy-inspecting");
+    if (box && was) {
+      box.style.removeProperty("transform");
+      box.style.removeProperty("transform-origin");
+      box.classList.remove("cdfy-inspecting");
+    }
+    [kase.tray, kase.spine].forEach((n) => n && ["--ex", "--ey"].forEach((p) => n.style.removeProperty(p)));
+    if (kase.shade) {
+      kase.shade.style.removeProperty("opacity");
+      kase.shade.style.removeProperty("transform");
+    }
     if (kase.lid && was) {
       kase.lid.style.removeProperty("--gx");
       kase.lid.style.removeProperty("--gy");
