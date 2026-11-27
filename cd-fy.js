@@ -334,19 +334,21 @@
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.025) 40%, rgba(255, 255, 255, 0.055)) !important;
       /* Lit from the upper left: a bright bevel on the top and left edges, a shaded one on the
          bottom and right, and the case's thickness showing as clear glass walls below and to the right */
+      /* The walls are clear moulded plastic: brightest where they meet the top face, clearer
+         through the middle, a bright far edge where the light catches it, then a crisp contact line. */
       box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-        inset 2px 2px 0 rgba(255, 255, 255, 0.16),
-        inset -2px -2px 0 rgba(0, 0, 0, 0.14),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.38),
+        inset 1px 1px 0 1px rgba(255, 255, 255, 0.12),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.12),
         inset 0 0 22px rgba(255, 255, 255, 0.05),
-        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.3),
-        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.12),
+        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.34),
+        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.17),
         calc(3px * var(--ex, 1)) calc(3px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.1),
         calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.08),
-        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.07),
-        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.22),
-        calc(7px * var(--ex, 1)) calc(7px * var(--ey, 1)) 0 rgba(0, 0, 0, 0.12),
-        8px 10px 4px rgba(0, 0, 0, 0.2),
+        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.14),
+        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.36),
+        calc(6.6px * var(--ex, 1)) calc(6.6px * var(--ey, 1)) 0 rgba(0, 0, 0, 0.22),
+        7px 9px 3px rgba(0, 0, 0, 0.18),
         14px 20px 34px rgba(0, 0, 0, 0.3);
     }
     /* The case's shadow when it is picked up: its own soft layer under the case, which
@@ -393,10 +395,13 @@
     }
     #cd-fy-tray .cdfy-clip {
       position: absolute;
-      height: 5px;
-      border-radius: 1px;
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+      height: 4px;
+      border-radius: 2px;
+      /* a small moulded tab: lit on top, a crisp edge below */
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05));
+      box-shadow:
+        inset 0 0 0 0.5px rgba(255, 255, 255, 0.3),
+        0 1px 0 rgba(0, 0, 0, 0.14);
       pointer-events: none;
     }
     /* The lid's hinge, and the eye above the case */
@@ -423,12 +428,19 @@
       inset: 0;
       position: absolute;
       inset: 0;
-      border-radius: 4px;
+      border-radius: 5px;
       pointer-events: auto;
       cursor: pointer;
       backface-visibility: visible;
-      /* light caught by the moulded corners, brightest toward the light */
+      /* Gloss: a thin bright line along the top edge (light skimming the glass), a broad soft
+         reflection sweeping across from the upper left, the face curving a touch darker toward
+         the lower right, and light caught by the moulded corners, brightest toward the light */
       background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 2.5px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 2.5px),
+        linear-gradient(118deg, rgba(255, 255, 255, 0) 7%, rgba(255, 255, 255, 0.15) 17%, rgba(255, 255, 255, 0.06) 27%, rgba(255, 255, 255, 0) 40%),
+        linear-gradient(118deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, 0.05) 60%, rgba(255, 255, 255, 0) 66%),
+        linear-gradient(160deg, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.08) 100%),
         radial-gradient(20px 20px at 3px 3px, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 70%),
         radial-gradient(16px 16px at calc(100% - 3px) 3px, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 70%),
         radial-gradient(16px 16px at 3px calc(100% - 3px), rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 70%),
@@ -500,22 +512,23 @@
       pointer-events: auto;
       cursor: grab;
     }
+    /* A scoop pressed into the lid's edge: in shade at the edge, its far rim catching the light,
+       with fine grip ribs, so it reads as a recess, not a tab */
     #cd-fy-lid .cdfy-groove::before {
       content: "";
       position: absolute;
       left: 6px;
       top: 0;
-      width: 11px;
+      width: 10px;
       height: 100%;
       border-radius: 0 999px 999px 0;
       background:
-        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(255, 255, 255, 0) 1px 4px),
-        linear-gradient(90deg, rgba(0, 20, 30, 0.32), rgba(255, 255, 255, 0.08));
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0 1px, rgba(255, 255, 255, 0) 1px 3.5px),
+        radial-gradient(130% 62% at 0% 50%, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0.16) 62%, rgba(0, 0, 0, 0.04) 100%);
       box-shadow:
-        inset 2px 0 3px rgba(0, 0, 0, 0.35),
-        inset -1px 0 0 rgba(255, 255, 255, 0.45),
-        inset 0 1px 0 rgba(0, 0, 0, 0.2),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+        inset 2px 0 3px rgba(0, 0, 0, 0.32),
+        inset -1px 0 0 rgba(255, 255, 255, 0.42),
+        inset 0 1px 0 rgba(0, 0, 0, 0.2);
       transition: background-color 0.2s ease, box-shadow 0.2s ease;
     }
     #cd-fy-lid .cdfy-groove:hover::before {
@@ -585,7 +598,8 @@
     #cd-fy-lid.is-shut.is-hover .cdfy-face {
       background-color: rgba(255, 255, 255, 0.02);
     }
-    /* The spine: the only solid part, a square bar of black plastic with ribbed ends */
+    /* The spine: a square bar of tinted glass, coloured by the playlist's own header colour,
+       with ribbed ends. The header's gradient shows through it. */
     #cd-fy-spine {
       z-index: 5;
       display: flex !important;
@@ -594,26 +608,51 @@
       justify-content: center;
       gap: calc(var(--btn) * 0.55);
       border-radius: 0 !important;
-      /* rounded black plastic: a highlight down its left, ribbed grips and lit end caps at the
-         top and bottom, and its thickness showing below and to the right, as the tray does */
+      --sp-tint: var(--cdfy-tint, #6a6a6a);
+      /* its walls are the same clear plastic as the tray's, carrying the spine's tint */
+      --sp-edge: color-mix(in srgb, var(--sp-tint) 55%, rgba(255, 255, 255, 0.16));
+      /* rounded glass: light down its left, a softer glint on its right, ribbed grips and lit
+         end caps top and bottom, and its thickness showing below and to the right, as the tray does */
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 3px),
-        linear-gradient(0deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0) 4px),
-        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.35) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 4px / 100% 9% no-repeat,
-        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.09) 0 1px, rgba(0, 0, 0, 0.35) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 calc(100% - 4px) / 100% 9% no-repeat,
-        linear-gradient(90deg, #000000 0%, #2c2c31 16%, #141416 38%, #070708 66%, #1c1c1f 90%, #050505 100%) !important;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 3px),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.22), rgba(0, 0, 0, 0) 4px),
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 1px, rgba(0, 0, 0, 0.12) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 4px / 100% 9% no-repeat,
+        repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 1px, rgba(0, 0, 0, 0.12) 1px 2px, rgba(0, 0, 0, 0) 2px 4px) 0 calc(100% - 4px) / 100% 9% no-repeat,
+        linear-gradient(90deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0.1) 13%, rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.1) 72%, rgba(255, 255, 255, 0.16) 93%, rgba(255, 255, 255, 0.05) 100%),
+        color-mix(in srgb, var(--sp-tint) 55%, rgba(255, 255, 255, 0.06)) !important;
+      /* (no backdrop blur: it made the first inspection stall while the case turns) */
       box-shadow:
-        inset 1px 0 0 rgba(255, 255, 255, 0.1),
-        inset -1px 0 0 rgba(255, 255, 255, 0.16),
-        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 #111113,
-        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 #0e0e10,
-        calc(3px * var(--ex, 1)) calc(3px * var(--ey, 1)) 0 #0b0b0c,
-        calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 #09090a,
-        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 #070708,
-        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 #040405,
-        7px 8px 3px rgba(0, 0, 0, 0.35),
-        14px 20px 34px rgba(0, 0, 0, 0.42);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+        inset 1px 0 0 rgba(255, 255, 255, 0.34),
+        inset 4px 0 5px -3px rgba(0, 0, 0, 0.22),
+        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 color-mix(in srgb, var(--sp-tint) 50%, rgba(255, 255, 255, 0.34)),
+        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 var(--sp-edge),
+        calc(3px * var(--ex, 1)) calc(3px * var(--ey, 1)) 0 var(--sp-edge),
+        calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 var(--sp-edge),
+        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 var(--sp-edge),
+        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 color-mix(in srgb, var(--sp-tint) 40%, rgba(255, 255, 255, 0.45)),
+        calc(6.6px * var(--ex, 1)) calc(6.6px * var(--ey, 1)) 0 rgba(0, 0, 0, 0.22),
+        7px 9px 3px rgba(0, 0, 0, 0.18),
+        14px 20px 34px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.4s ease;
     }
+    /* The hinge: two short glass knuckles where the lid turns, at the spine's top and bottom */
+    #cd-fy-spine .cdfy-knuckle {
+      position: absolute;
+      right: -1.5px;
+      width: 4px;
+      height: 11%;
+      border-radius: 3px;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.6) 38%, rgba(255, 255, 255, 0.14) 70%, rgba(0, 0, 0, 0.18)),
+        color-mix(in srgb, var(--sp-tint) 55%, rgba(0, 0, 0, 0.2));
+      box-shadow:
+        0 0 0 0.5px rgba(255, 255, 255, 0.35),
+        1px 1px 2px rgba(0, 0, 0, 0.28);
+    }
+    #cd-fy-spine .cdfy-knuckle[data-at="top"] { top: 8%; }
+    #cd-fy-spine .cdfy-knuckle[data-at="bottom"] { bottom: 8%; }
     #cd-fy-spine .cdfy-btn {
       all: unset;
       box-sizing: border-box;
@@ -625,16 +664,17 @@
       height: var(--btn);
       border-radius: 3px;
       cursor: pointer;
-      color: rgba(255, 255, 255, 0.88);
-      /* a square key standing in a well in the spine: lit top, thick lower edge */
-      background: linear-gradient(180deg, #34343a, #1a1a1d 55%, #121214);
+      color: rgba(255, 255, 255, 0.95);
+      /* a square glass key standing on the spine: lit top, thicker lower edge */
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.07) 55%, rgba(0, 0, 0, 0.06)),
+        color-mix(in srgb, var(--sp-tint) 30%, rgba(0, 0, 0, 0.18));
       box-shadow:
-        0 0 0 1px #000000,
-        0 1px 0 1px rgba(255, 255, 255, 0.07),
-        inset 0 1px 0 rgba(255, 255, 255, 0.28),
-        inset 1px 0 0 rgba(255, 255, 255, 0.08),
-        inset 0 -2px 0 rgba(0, 0, 0, 0.55),
-        0 2px 3px rgba(0, 0, 0, 0.6);
+        0 0 0 1px rgba(255, 255, 255, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 1px 0 0 rgba(255, 255, 255, 0.14),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.28);
       transform: translateY(0) scale(1);
       transition:
         transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
@@ -648,7 +688,9 @@
     }
     #cd-fy-spine .cdfy-btn:hover {
       color: #ffffff;
-      background: linear-gradient(180deg, #414148, #222226 55%, #17171a);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0.12) 55%, rgba(0, 0, 0, 0.04)),
+        color-mix(in srgb, var(--sp-tint) 36%, rgba(0, 0, 0, 0.14));
     }
     #cd-fy-spine .cdfy-btn:focus-visible {
       box-shadow: 0 0 0 2px #1ed760, inset 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -656,12 +698,13 @@
     #cd-fy-spine .cdfy-btn.is-down {
       transform: translateY(1px) scale(0.95);
       color: #1ed760;
-      background: linear-gradient(180deg, #141416, #1c1c1f);
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(255, 255, 255, 0.06)),
+        color-mix(in srgb, var(--sp-tint) 34%, rgba(0, 0, 0, 0.3));
       box-shadow:
-        0 0 0 1px #000000,
-        0 1px 0 1px rgba(255, 255, 255, 0.07),
-        inset 0 2px 3px rgba(0, 0, 0, 0.7),
-        inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+        0 0 0 1px rgba(255, 255, 255, 0.22),
+        inset 0 2px 3px rgba(0, 0, 0, 0.4),
+        inset 0 -1px 0 rgba(255, 255, 255, 0.12),
         0 0 10px rgba(30, 215, 96, 0.3);
       transition:
         transform 0.08s ease-out,
@@ -2460,6 +2503,7 @@
     kase.lid = kase.lidWrap.firstChild;
     kase.spine = layer(
       "cd-fy-spine",
+      '<span class="cdfy-knuckle" data-at="top"></span><span class="cdfy-knuckle" data-at="bottom"></span>' +
       `<button type="button" class="cdfy-btn" data-act="next" aria-label="Next track">${ICONS.next}</button>` +
         `<button type="button" class="cdfy-btn cdfy-play" data-act="play" aria-label="Play / pause">${ICONS.playpause}</button>` +
         `<button type="button" class="cdfy-btn" data-act="prev" aria-label="Previous track">${ICONS.prev}</button>`
@@ -2585,7 +2629,8 @@
       c.style.bottom = at.startsWith("bottom") ? "1px" : "auto";
     });
     kase.g = { W: H + sw, hinge: H + sw - (R + m), m, sw };
-    caseMeasure();
+    // (Not while it's being inspected: tilted and lifted, it would measure wrong and nudge the text.)
+    if (!insp.on) caseMeasure();
     caseRoom();
   }
 
@@ -3192,7 +3237,8 @@
       b = document.createElement("button");
       b.type = "button";
       b.className = "cdfy-inspect";
-      b.innerHTML = INSPECT_ICON + "<span>Inspect Case</span>";
+      b.innerHTML = INSPECT_ICON + "<span>Inspect</span>";
+      b.setAttribute("aria-label", "Inspect the CD case");
       b.title = "Pick the case up and look it over";
       b.addEventListener("click", (e) => {
         e.preventDefault();
@@ -3215,18 +3261,18 @@
     } else if (!b.isConnected) kase.text[0].el.append(b);
   }
 
-  // The pill takes on the playlist's own header colour.
+  // The pill and the case's glass spine take on the playlist's own header colour.
   function inspectTint() {
-    const b = insp.btn;
-    if (!b) return;
     const head = kase.flex && kase.flex.closest(".main-entityHeader-container");
     const bg = (head && head.querySelector(".main-entityHeader-backgroundColor")) || document.querySelector(".main-entityHeader-backgroundColor");
     let c = bg ? getComputedStyle(bg).backgroundColor : "";
     if (!c || c === "transparent" || /^rgba\(.*,\s*0\)$/.test(c)) c = "";
-    if (c === insp.tint) return;
+    [insp.btn, kase.spine].forEach((n) => {
+      if (!n || n.style.getPropertyValue("--cdfy-tint") === c) return;
+      if (c) n.style.setProperty("--cdfy-tint", c);
+      else n.style.removeProperty("--cdfy-tint");
+    });
     insp.tint = c;
-    if (c) b.style.setProperty("--cdfy-tint", c);
-    else b.style.removeProperty("--cdfy-tint");
   }
 
 
