@@ -340,15 +340,15 @@
         inset 2px 2px 0 rgba(255, 255, 255, 0.16),
         inset -2px -2px 0 rgba(0, 0, 0, 0.14),
         inset 0 0 22px rgba(255, 255, 255, 0.05),
-        1px 1px 0 rgba(255, 255, 255, 0.3),
-        2px 2px 0 rgba(255, 255, 255, 0.12),
-        3px 3px 0 rgba(255, 255, 255, 0.1),
-        4px 4px 0 rgba(255, 255, 255, 0.08),
-        5px 5px 0 rgba(255, 255, 255, 0.07),
-        6px 6px 0 rgba(255, 255, 255, 0.22),
-        7px 7px 0 rgba(0, 0, 0, 0.12),
-        8px 10px 4px rgba(0, 0, 0, 0.2),
-        14px 20px 34px rgba(0, 0, 0, 0.3);
+        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.3),
+        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.12),
+        calc(3px * var(--ex, 1)) calc(3px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.1),
+        calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.08),
+        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.07),
+        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 rgba(255, 255, 255, 0.22),
+        calc(7px * var(--ex, 1)) calc(7px * var(--ey, 1)) 0 rgba(0, 0, 0, 0.12),
+        calc(8px + 6px * var(--hl, 0)) calc(10px + 14px * var(--hl, 0)) calc(4px + 10px * var(--hl, 0)) rgba(0, 0, 0, calc(0.2 - 0.06 * var(--hl, 0))),
+        calc(14px + 10px * var(--hl, 0)) calc(20px + 26px * var(--hl, 0)) calc(34px + 26px * var(--hl, 0)) rgba(0, 0, 0, calc(0.3 - 0.06 * var(--hl, 0)));
     }
     #cd-fy-tray.is-open {
       cursor: pointer;
@@ -597,14 +597,14 @@
       box-shadow:
         inset 1px 0 0 rgba(255, 255, 255, 0.1),
         inset -1px 0 0 rgba(255, 255, 255, 0.16),
-        1px 1px 0 #111113,
-        2px 2px 0 #0e0e10,
-        3px 3px 0 #0b0b0c,
-        4px 4px 0 #09090a,
-        5px 5px 0 #070708,
-        6px 6px 0 #040405,
-        7px 8px 3px rgba(0, 0, 0, 0.35),
-        14px 20px 34px rgba(0, 0, 0, 0.42);
+        calc(1px * var(--ex, 1)) calc(1px * var(--ey, 1)) 0 #111113,
+        calc(2px * var(--ex, 1)) calc(2px * var(--ey, 1)) 0 #0e0e10,
+        calc(3px * var(--ex, 1)) calc(3px * var(--ey, 1)) 0 #0b0b0c,
+        calc(4px * var(--ex, 1)) calc(4px * var(--ey, 1)) 0 #09090a,
+        calc(5px * var(--ex, 1)) calc(5px * var(--ey, 1)) 0 #070708,
+        calc(6px * var(--ex, 1)) calc(6px * var(--ey, 1)) 0 #040405,
+        calc(7px + 6px * var(--hl, 0)) calc(8px + 14px * var(--hl, 0)) calc(3px + 10px * var(--hl, 0)) rgba(0, 0, 0, 0.35),
+        calc(14px + 10px * var(--hl, 0)) calc(20px + 26px * var(--hl, 0)) calc(34px + 26px * var(--hl, 0)) rgba(0, 0, 0, 0.42);
     }
     #cd-fy-spine .cdfy-btn {
       all: unset;
@@ -700,6 +700,95 @@
     }
     .cdfy-snap {
       animation: cdfy-snap 0.32s cubic-bezier(0.3, 0, 0.3, 1);
+    }
+    /* "Inspect Case": a clear glass pill above the owner's name. It is tinted with the
+       playlist's own header colour and lets the header's gradient show through. */
+    .cdfy-inspect {
+      all: unset;
+      box-sizing: border-box;
+      align-self: flex-start;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      width: max-content;
+      margin: 10px 0 2px;
+      padding: 7px 15px 7px 11px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.2px;
+      color: #ffffff;
+      cursor: pointer;
+      user-select: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05) 48%, rgba(255, 255, 255, 0.14)),
+        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 34%, transparent);
+      -webkit-backdrop-filter: blur(14px) saturate(1.8) brightness(1.08);
+      backdrop-filter: blur(14px) saturate(1.8) brightness(1.08);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+        0 4px 14px rgba(0, 0, 0, 0.22),
+        0 0 18px color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 0%, transparent);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+      transform: translateY(0) scale(1);
+      transition:
+        transform 0.35s cubic-bezier(0.22, 0.8, 0.24, 1),
+        box-shadow 0.35s ease,
+        background 0.35s ease,
+        opacity 0.35s ease;
+    }
+    .cdfy-inspect svg {
+      width: 15px;
+      height: 15px;
+      flex: none;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .cdfy-inspect:hover {
+      transform: translateY(-1px) scale(1.02);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0.18)),
+        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 44%, transparent);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.44),
+        inset 0 1px 0 rgba(255, 255, 255, 0.65),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.16),
+        0 6px 18px rgba(0, 0, 0, 0.26),
+        0 0 18px color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 45%, transparent);
+    }
+    .cdfy-inspect:active {
+      transform: translateY(0) scale(0.96);
+      transition-duration: 0.1s;
+    }
+    .cdfy-inspect:focus-visible {
+      outline: 2px solid #ffffff;
+      outline-offset: 2px;
+    }
+    /* While the case is being looked over, a light runs along the pill */
+    .cdfy-inspect.is-busy {
+      cursor: default;
+      background:
+        linear-gradient(105deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.32) 45%, rgba(255, 255, 255, 0) 60%) 0 0 / 260% 100%,
+        linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.06) 48%, rgba(255, 255, 255, 0.16)),
+        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 44%, transparent);
+      animation: cdfy-busy 1.6s linear infinite;
+    }
+    @keyframes cdfy-busy {
+      from { background-position: 130% 0, 0 0, 0 0; }
+      to { background-position: -130% 0, 0 0, 0 0; }
+    }
+    /* Being inspected: the case is lifted off the page, so nothing in it takes a click */
+    .cdfy-inspecting #cd-fy-lid .cdfy-face,
+    .cdfy-inspecting #cd-fy-lid .cdfy-groove,
+    .cdfy-inspecting #cd-fy-tray {
+      cursor: default !important;
     }
   `;
   document.head.appendChild(style);
@@ -2399,9 +2488,15 @@
     for (let n = found ? f.nextElementSibling : null; n; n = n.nextElementSibling) {
       kase.text.push({ el: n, tf: n.style.transform, to: n.style.transformOrigin, wc: n.style.willChange, tr: n.style.transition, left: 0 });
     }
+    inspectButton();
+    inspectTint();
   }
 
   function caseTeardown() {
+    inspectStop();
+    if (insp.btn) insp.btn.remove();
+    insp.btn = null;
+    insp.tint = "";
     if (kase.raf) cancelAnimationFrame(kase.raf);
     [kase.tray, kase.lidWrap, kase.spine].forEach((n) => n && n.remove());
     if (kase.row) kase.row.el.style.overflowX = kase.row.ox;
@@ -2580,6 +2675,11 @@
 
   function caseSet(open) {
     if (!kase.lid) return;
+    if (open && insp.on) return; // in hand being looked over: it stays shut
+    if (open && insp.queued) {
+      insp.queued = false;
+      if (insp.btn) insp.btn.classList.remove("is-busy");
+    }
     const to = open ? 1 : 0;
     if (kase.anim && kase.anim.phys && kase.anim.to === to) return;
     if (!kase.anim && !kase.drag && kase.p === to) return;
@@ -2608,6 +2708,14 @@
     if (stop === 0 && a && !a.snapped) {
       a.snapped = true;
       caseSnap();
+    }
+    // Shut for an inspection: pick it up once the click of shutting has settled.
+    if (stop === 0 && insp.queued) {
+      insp.queued = false;
+      setTimeout(() => {
+        if (kase.lid && !kase.open && !kase.anim && !kase.drag) inspectStart();
+        else if (insp.btn) insp.btn.classList.remove("is-busy");
+      }, 260);
     }
   }
 
@@ -2712,6 +2820,8 @@
     if (kase.tray && (!want || !kase.tray.isConnected || kase.tray.parentElement !== stage.parent || kase.key !== fitKey())) caseTeardown();
     if (!want) return;
     if (!kase.tray) caseBuild();
+    inspectButton();
+    inspectTint();
     casePlace(cx, cy, R);
     casePlay();
   }
@@ -2730,6 +2840,7 @@
         btn.classList.add("is-down");
         return;
       }
+      if (insp.on) return; // in hand being looked over: the lid stays shut
       const opening = kase.open || (kase.anim && kase.anim.to === 1);
       if (e.target.closest("#cd-fy-lid")) {
         if (opening) caseSet(false);
@@ -2833,7 +2944,7 @@
     "mousemove",
     (e) => {
       const lid = kase.lid;
-      if (!lid || !kase.lidWrap) return;
+      if (!lid || !kase.lidWrap || insp.on) return;
       const b = kase.lidWrap.getBoundingClientRect();
       const inside = e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom;
       lid.classList.toggle("is-hover", inside && !kase.open);
@@ -2844,6 +2955,175 @@
     { passive: true }
   );
   Spicetify.Player.addEventListener("onplaypause", () => setTimeout(casePlay, 30));
+
+  // ------------------------------ inspect case ------------------------------
+  // "Inspect Case", a glass pill above the owner's name, picks the shut case up off the
+  // page and turns it over in the light, the way you'd look a jewel case over in your
+  // hand: lifted toward you, turned to show the groove side and then the spine, tipped
+  // to look along its bottom edge, and set back down. Its walls show as it turns. It
+  // only happens with the case shut: pressed while the case is open, the lid swings
+  // shut first and then the case is picked up. The CD keeps spinning inside.
+  const INSPECT_MS = 4800;
+  const INSPECT_PERSPECTIVE = 1400; // px
+  // [time 0..1, tip (rotateX deg), turn (rotateY deg), roll (rotateZ deg), size, rise (px)]
+  const INSPECT_KEYS = [
+    [0, 0, 0, 0, 1, 0],
+    [0.13, 9, -7, -1.2, 1.06, -5],
+    [0.31, -5, -30, -2.4, 1.09, -8],
+    [0.5, 7, 27, 1.8, 1.09, -8],
+    [0.68, 24, 6, 0.6, 1.08, -6],
+    [0.85, -5, -5, -0.4, 1.035, -3],
+    [1, 0, 0, 0, 1, 0],
+  ];
+  const INSPECT_ICON =
+    '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6"/><path d="M10.2 10.2 14 14"/></svg>';
+  const insp = { btn: null, on: false, t0: 0, raf: 0, queued: false, tint: "" };
+
+  // The pose at time t: a smooth curve through the keys (Catmull-Rom over their uneven
+  // times), starting and ending at rest with no speed, so it never jerks.
+  function inspectPose(t) {
+    const K = INSPECT_KEYS;
+    let i = 0;
+    while (i < K.length - 2 && t > K[i + 1][0]) i++;
+    const a = K[i];
+    const b = K[i + 1];
+    const h = b[0] - a[0];
+    const u = Math.min(1, Math.max(0, (t - a[0]) / h));
+    const u2 = u * u;
+    const u3 = u2 * u;
+    const slope = (j, c) => (j === 0 || j === K.length - 1 ? 0 : (K[j + 1][c] - K[j - 1][c]) / (K[j + 1][0] - K[j - 1][0]));
+    const out = [];
+    for (let c = 1; c < 6; c++) {
+      out.push((2 * u3 - 3 * u2 + 1) * a[c] + (u3 - 2 * u2 + u) * h * slope(i, c) + (-2 * u3 + 3 * u2) * b[c] + (u3 - u2) * h * slope(i + 1, c));
+    }
+    return out;
+  }
+
+  function inspectFrame(now) {
+    insp.raf = 0;
+    const box = stage.parent;
+    if (!insp.on || !box || !kase.tray) return inspectStop();
+    const t = Math.min(1, (now - insp.t0) / INSPECT_MS);
+    const [rx, ry, rz, s, ty] = inspectPose(t);
+    box.style.setProperty(
+      "transform",
+      `perspective(${INSPECT_PERSPECTIVE}px) translateY(${ty.toFixed(2)}px) rotateX(${rx.toFixed(3)}deg) rotateY(${ry.toFixed(3)}deg) rotateZ(${rz.toFixed(3)}deg) scale(${s.toFixed(4)})`,
+      "important"
+    );
+    // The case's walls: its thickness shows on whichever side turns toward you.
+    const T = 0.07 * (kase.g ? kase.g.W : 300);
+    const sx = Math.sin((ry * Math.PI) / 180);
+    const sy = Math.sin((rx * Math.PI) / 180);
+    box.style.setProperty("--ex", (1 - (sx * T) / 6).toFixed(3));
+    box.style.setProperty("--ey", (1 + (sy * T) / 6).toFixed(3));
+    // Lifted: its shadow falls further off and softer.
+    box.style.setProperty("--hl", Math.max(0, (s - 1) / 0.09).toFixed(3));
+    // The light runs over the glass as it turns.
+    if (kase.lid) {
+      kase.lid.style.setProperty("--gx", (30 + ry * 1.4).toFixed(1) + "%");
+      kase.lid.style.setProperty("--gy", (20 - rx * 1.4).toFixed(1) + "%");
+      kase.lid.style.setProperty("--sweep", (78 + ry * 1.3).toFixed(2) + "%");
+      kase.lid.classList.toggle("is-hover", t > 0.04 && t < 0.94);
+    }
+    if (t >= 1) return inspectStop();
+    insp.raf = requestAnimationFrame(inspectFrame);
+  }
+
+  function inspectStart() {
+    if (!kase.tray || !stage.parent || insp.on || kase.drag) return;
+    if (insp.btn) insp.btn.classList.add("is-busy");
+    // Open (or on its way): shut it first; caseLanded starts the inspection.
+    if (kase.open || kase.p > 0.0005 || (kase.anim && kase.anim.phys)) {
+      insp.queued = true;
+      caseSet(false);
+      return;
+    }
+    if (kase.anim) {
+      // a rattle in progress: settle it
+      kase.p = kase.anim.from;
+      kase.anim = null;
+      caseWrite();
+    }
+    insp.queued = false;
+    const box = stage.parent;
+    const tr = kase.tray;
+    const ox = (parseFloat(tr.style.left) || 0) + tr.offsetWidth / 2;
+    const oy = (parseFloat(tr.style.top) || 0) + tr.offsetHeight / 2;
+    box.style.setProperty("transform-origin", `${ox.toFixed(1)}px ${oy.toFixed(1)}px`, "important");
+    box.style.setProperty("will-change", "transform");
+    insp.on = true;
+    insp.t0 = performance.now();
+    document.body.classList.add("cdfy-inspecting");
+    if (insp.btn) insp.btn.setAttribute("aria-disabled", "true");
+    insp.raf = requestAnimationFrame(inspectFrame);
+  }
+
+  function inspectStop() {
+    if (insp.raf) cancelAnimationFrame(insp.raf);
+    insp.raf = 0;
+    const was = insp.on;
+    insp.on = false;
+    insp.queued = false;
+    const box = stage.parent;
+    if (box && was) ["transform", "transform-origin", "will-change", "--ex", "--ey", "--hl"].forEach((p) => box.style.removeProperty(p));
+    document.body.classList.remove("cdfy-inspecting");
+    if (kase.lid && was) {
+      kase.lid.style.removeProperty("--gx");
+      kase.lid.style.removeProperty("--gy");
+      kase.lid.classList.remove("is-hover");
+      caseWrite(); // the light's streak back where the lid's position puts it
+    }
+    if (insp.btn) {
+      insp.btn.classList.remove("is-busy");
+      insp.btn.removeAttribute("aria-disabled");
+    }
+  }
+
+  // Put the pill above the owner's name, in the header's text, so it slides over with
+  // the text when the case opens. Spotify may redraw the header: then it goes back in.
+  function inspectButton() {
+    if (!kase.text || !kase.text.length) return;
+    let b = insp.btn;
+    if (!b) {
+      b = document.createElement("button");
+      b.type = "button";
+      b.className = "cdfy-inspect";
+      b.innerHTML = INSPECT_ICON + "<span>Inspect Case</span>";
+      b.title = "Pick the case up and look it over";
+      b.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        inspectStart();
+      });
+      insp.btn = b;
+    }
+    let meta = null;
+    for (const t of kase.text) {
+      meta = t.el.querySelector(".main-entityHeader-metaData");
+      if (!meta) {
+        const who = t.el.querySelector("[data-testid='creator-link'], [data-testid='playlist-owner'], a[href*='/user/']");
+        meta = who && who.parentElement !== t.el ? who.parentElement : null;
+      }
+      if (meta) break;
+    }
+    if (meta) {
+      if (b.nextElementSibling !== meta || !b.isConnected) meta.before(b);
+    } else if (!b.isConnected) kase.text[0].el.append(b);
+  }
+
+  // The pill takes on the playlist's own header colour.
+  function inspectTint() {
+    const b = insp.btn;
+    if (!b) return;
+    const head = kase.flex && kase.flex.closest(".main-entityHeader-container");
+    const bg = (head && head.querySelector(".main-entityHeader-backgroundColor")) || document.querySelector(".main-entityHeader-backgroundColor");
+    let c = bg ? getComputedStyle(bg).backgroundColor : "";
+    if (!c || c === "transparent" || /^rgba\(.*,\s*0\)$/.test(c)) c = "";
+    if (c === insp.tint) return;
+    insp.tint = c;
+    if (c) b.style.setProperty("--cdfy-tint", c);
+    else b.style.removeProperty("--cdfy-tint");
+  }
 
 
   // ------------------------------ main loop --------------------------------

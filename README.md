@@ -25,6 +25,7 @@ A [Spicetify](https://spicetify.app) extension that turns the cover of the playl
 
 - **Spins the CD.** While a playlist plays, its cover spins like a disc in the playlist header, in the sidebar, and on the home and search shelves. When you pause, it glides back to where it started.
 - **Glass CD case.** On the playlist page the CD sits in a clear glass jewel case with a black spine on the right. The spine has three working buttons: **next** (top), **play/pause** (middle) and **previous** (bottom). To open the case, push the lid up from the groove on its left edge, or just click the groove. The lid swings a full 180° to the right and the playlist details slide over to make room. Click the lid again to shut it.
+- **Inspect Case.** A glass button above your username, tinted with the playlist's colour. Press it and the shut case is lifted toward you and turned over in the light, showing its edges, groove and spine, then set back down. If the case is open, it shuts first.
 - **Scratch.** Click and drag the spinning CD to scratch it. **This moves the song's playback position**, like scratching a real record.
 - **Hover tilt.** With the case open and the music paused, the CD leans toward your cursor.
 - **Click ripple.** With the case open and the music paused, clicking the CD sends a slow ripple out from that spot, like a drop landing in water.
@@ -215,6 +216,7 @@ Pick one. The current speed is shown in green.
 | Push up from the groove, or click it | Left edge of the shut case | The case unlatches and the lid opens 180° |
 | Click the lid | Open case | The case shuts with a click |
 | Click the shut lid anywhere else | Shut case | The lid rattles and the groove flashes, to show where to open it |
+| Click **Inspect Case** | Above your username | The case is picked up and looked over (it shuts first if open) |
 | **▲** / **▶❚❚** / **▼** | Black spine | Next song / play or pause / previous song |
 | Click and drag | The spinning CD | Scratch: moves the song's playback position |
 | Move the mouse over | The CD (case open, paused) | Hover tilt |
