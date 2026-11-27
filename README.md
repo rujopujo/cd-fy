@@ -84,6 +84,45 @@ So for the disc to fill the CD exactly, with no border showing around it, draw y
 - **Upload the picture as usual:** on the playlist page, open **…** → **Edit details**, then pick the image.
 - **A disc that's a bit off?** Hold **Ctrl** and scroll over the CD to fine-tune that playlist's zoom (see [Mouse and keyboard controls](#mouse-and-keyboard-controls)). cd-fy remembers it for that playlist only.
 
+### Turn your cover into a picture disc with an AI chat
+
+The easiest way to get a cover that looks great as a CD is to print your playlist's artwork onto a record. This repository includes a blank record to start from:
+
+![The blank vinyl record](vinyl-base.png)
+
+**[`vinyl-base.png`](vinyl-base.png)** is 1200 × 1200 with a transparent background. The record is 1000 px across, centred, so it already matches the [sizes above](#ready-made-sizes). It's drawn for this project, so you're free to use it.
+
+1. Download [`vinyl-base.png`](vinyl-base.png) and your playlist's current cover.
+2. Open an AI chat that can run code and edit images (for example ChatGPT).
+3. Upload both images and paste the prompt below.
+4. Check the PNG it gives you, then set it as the playlist's cover: **…** → **Edit details** → pick the image.
+
+```text
+I've uploaded a vinyl record image (vinyl-base.png, 1200x1200, transparent background)
+and a square playlist cover image. Please put the cover image onto the OUTER playing
+surface of the record, so it looks like a picture-disc vinyl. Give me the result as a
+transparent 1200x1200 PNG.
+
+Details:
+- Open both images with Pillow. The record image already has real transparency: keep
+  its alpha channel exactly as it is, so the area outside the disc and the spindle hole
+  stay transparent.
+- Record geometry (in the 1200x1200 image): the disc centre is (600, 600) and its outer
+  radius is 500. The black centre label has radius 180, and the spindle hole (radius 12)
+  is in the middle.
+- Only apply the artwork to the ring between the label (r > 180) and the outer edge
+  (r < 500). Keep the centre label black and the spindle hole untouched.
+- Centre-crop the cover to a square and scale it to 1010x1010 so that it covers the
+  disc. Centre it on the disc.
+- Blend so that the grooves and shine of the record still show through. With the
+  record's brightness as lum (mean of RGB, 0 to 1), use:
+  result = clip(art * clip(0.5 + 1.2 * lum, 0, 1.4) + (lum ** 1.5) * 0.3, 0, 1)
+- Feather the ring mask edges with a small Gaussian blur (about 1.2 px).
+- Export as a 1200x1200 PNG that keeps the record's alpha channel.
+- Look at the result before giving it to me, and check that the artwork has no gaps
+  at the disc edge. Then send me the PNG.
+```
+
 ---
 
 ## Installation
