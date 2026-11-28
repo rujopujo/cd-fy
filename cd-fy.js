@@ -752,105 +752,56 @@
     .cdfy-snap {
       animation: cdfy-snap 0.32s cubic-bezier(0.3, 0, 0.3, 1);
     }
-    /* "Inspect Case": a clear glass pill above the owner's name. It is tinted with the
-       playlist's own header colour and lets the header's gradient show through. */
+    /* "Inspect": a star above the owner's name, on its own (no button behind it) */
     .cdfy-inspect {
       all: unset;
       box-sizing: border-box;
       align-self: flex-start;
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      width: max-content;
-      margin: 10px 0 2px;
-      padding: 7px 15px 7px 11px;
-      border-radius: 999px;
-      font-family: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: 0.2px;
-      color: #ffffff;
+      display: inline-grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      margin: 8px 0 0 -5px;
+      border-radius: 50%;
+      color: rgba(255, 255, 255, 0.82);
       cursor: pointer;
       user-select: none;
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.05) 48%, rgba(255, 255, 255, 0.14)),
-        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 34%, transparent);
-      -webkit-backdrop-filter: blur(14px) saturate(1.8) brightness(1.08);
-      backdrop-filter: blur(14px) saturate(1.8) brightness(1.08);
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.34),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.16),
-        0 4px 14px rgba(0, 0, 0, 0.22),
-        0 0 18px color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 0%, transparent);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-      transform: translateY(0) scale(1);
+      transform: scale(1);
       transition:
-        transform 0.35s cubic-bezier(0.22, 0.8, 0.24, 1),
-        box-shadow 0.35s ease,
-        background 0.35s ease,
-        opacity 0.35s ease;
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        color 0.2s ease;
     }
     .cdfy-inspect svg {
-      width: 15px;
-      height: 15px;
-      flex: none;
-      fill: none;
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
       stroke: currentColor;
-      stroke-width: 1.7;
-      stroke-linecap: round;
+      stroke-width: 0.6;
       stroke-linejoin: round;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
     }
     .cdfy-inspect:hover {
-      transform: translateY(-1px) scale(1.02);
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0.18)),
-        color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 44%, transparent);
-      box-shadow:
-        inset 0 0 0 1px rgba(255, 255, 255, 0.44),
-        inset 0 1px 0 rgba(255, 255, 255, 0.65),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.16),
-        0 6px 18px rgba(0, 0, 0, 0.26),
-        0 0 18px color-mix(in srgb, var(--cdfy-tint, #7a7a7a) 45%, transparent);
+      color: #ffffff;
+      transform: scale(1.14);
     }
+    /* Click: the star presses in (smaller, its shadow drawn in close) and springs back */
     .cdfy-inspect:active {
-      transform: translateY(0) scale(0.96);
-      transition-duration: 0.1s;
+      transform: translateY(1px) scale(0.86);
+      transition: transform 0.08s ease-out, color 0.08s ease;
+    }
+    .cdfy-inspect svg {
+      transition: filter 0.2s ease;
+    }
+    .cdfy-inspect:active svg {
+      filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.45));
+      transition-duration: 0.08s;
     }
     .cdfy-inspect:focus-visible {
       outline: 2px solid #ffffff;
-      outline-offset: 2px;
-    }
-    /* While the case is being looked over, a light runs along the pill (moved, not repainted) */
-    .cdfy-inspect {
-      position: relative;
-      overflow: hidden;
-    }
-    .cdfy-inspect::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(105deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.34) 50%, rgba(255, 255, 255, 0) 80%);
-      transform: translateX(-110%);
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      outline-offset: 1px;
     }
     .cdfy-inspect.is-busy {
       cursor: default;
-    }
-    .cdfy-inspect.is-busy::after {
-      opacity: 1;
-      animation: cdfy-busy 1.7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-    }
-    .cdfy-inspect.cdfy-warm::after {
-      opacity: 0.001;
-      animation: cdfy-busy 1.7s linear infinite;
-    }
-    @keyframes cdfy-busy {
-      from { transform: translateX(-110%); }
-      to { transform: translateX(110%); }
     }
     /* Being inspected: the case is lifted off the page, so nothing in it takes a click */
     .cdfy-inspecting #cd-fy-lid .cdfy-face,
@@ -938,40 +889,229 @@
   }
 
   // ---------------------------- spin engine --------------------------------
+  // The turning itself runs on the graphics compositor, not in JavaScript: each spinning
+  // cover gets a CSS animation of its `rotate` property (Web Animations), which the
+  // browser plays on its own thread. So the CD keeps turning perfectly evenly even when
+  // Spotify's page is busy, on a slow computer too, and a steady spin costs no script
+  // time at all.
+  //
+  // Speeding up, gliding home and coasting to a stop are worked out exactly in advance
+  // (as curves of angle over time) and handed over as keyframes, so they are smooth on
+  // the compositor too. Script only runs while a speed change is under way, to fade the
+  // needle wobble in or out and to switch over when the change is done. Scratching is
+  // driven straight from the mouse, as before.
+  //
+  // A warped record: the wobble is a small fixed tilt of the disc, turned round with it,
+  // so the wobble rides along on the compositor's spin for free.
   const states = new WeakMap();
-  const live = new Set();
+  const live = new Set(); // covers that need the script's frame loop (speed changes, scratching, press spring)
   const running = new Set();
   let raf = 0;
   let last = 0;
 
   const fullSpeed = () => S.rpm * 6 * S.dir;
   const isHeader = (el) => el.matches(HEADER_IMG_SEL + "," + HEADER_WRAP_SEL);
+  const CSS_SPIN = (() => {
+    try {
+      return typeof Element.prototype.animate === "function" && !!(window.CSS && CSS.supports && CSS.supports("rotate", "10deg"));
+    } catch (e) {
+      return false;
+    }
+  })();
+  const SPIN_KEYS_PER_S = 60; // keyframes per second for a speed change (sampled from the exact curve)
+  const SPIN_TAIL_S = 60; // a speed-up carries on at full speed this long, should the switch-over come late
+  const SPIN_K = 3.2; // 1/s: how briskly it comes up to speed (the turntable's torque)
+  const WOB_X = 1.15; // degrees: the warp's tilt
+  const WOB_Y = 0.75;
+
+  // How much wobble at this speed: it grows as the record comes up to speed.
+  const wobAt = (omega) => (S.wobble ? Math.min(1, Math.abs(omega || 0) / Math.max(1, Math.abs(fullSpeed()))) : 0);
+
+  function wobTf(w) {
+    if (!(w > 0.002)) return "";
+    return ` rotateX(${(WOB_X * w).toFixed(3)}deg) rotateY(${(WOB_Y * w).toFixed(3)}deg)`;
+  }
 
   function applyAngle(el, s) {
     const sc = s.scale !== undefined && s.scale !== 1 ? ` scale(${s.scale.toFixed(4)})` : "";
     const pre = tiltPrefix(el); // hover tilt goes in front of the spin
-    // Warp & needle wobble: an orbital tilt that follows the rotation. Its size
-    // follows the speed (smoothed), so it fades in as the record spins up and
-    // out as it slows, and a record coming to rest never snaps flat.
-    const want = S.wobble ? Math.min(1, Math.abs(s.omega || 0) / Math.max(1, Math.abs(fullSpeed()))) : 0;
+    // The wobble's size follows the speed (smoothed), so it fades in as the record spins
+    // up and out as it slows, and a record coming to rest never snaps flat.
+    const want = wobAt(s.omega);
     s.wob = s.wob === undefined ? want : s.wob + (want - s.wob) * 0.12;
     if (s.wob < 0.002) s.wob = 0;
-    if (s.wob > 0) {
-      const rad = (s.angle * Math.PI) / 180;
-      const tiltX = (Math.sin(rad) * 1.5 * s.wob).toFixed(2);
-      const tiltY = (Math.cos(rad) * 1.5 * s.wob).toFixed(2);
-      const shiftZ = (Math.sin(rad * 2) * 0.4 * s.wob).toFixed(2);
-      el.style.transform = `${pre}rotate3d(0, 0, 1, ${s.angle.toFixed(2)}deg) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateZ(${shiftZ}px)${sc}`;
+    let tf;
+    if (s.anim) {
+      // The compositor turns it (its `rotate`); only the tilt, the wobble and the press are written here.
+      tf = `${pre}${wobTf(s.wob).trim()}${sc}`.trim() || "translateZ(0)";
     } else {
-      el.style.transform = `${pre}rotate3d(0, 0, 1, ${s.angle.toFixed(2)}deg) translateZ(0)${sc}`;
+      tf = `${pre}rotate3d(0, 0, 1, ${(s.angle || 0).toFixed(2)}deg)${wobTf(s.wob)} translateZ(0)${sc}`;
+    }
+    if (tf !== s.lastTf) {
+      s.lastTf = tf;
+      el.style.transform = tf;
     }
     sheenFollow(el); // the CD's shadow follows its lift and press-down
   }
 
+  // ---- curves: angle (deg) and speed (deg/s) after t seconds ----
+  // Coming up to speed (or to a new speed): a critically damped approach, as a turntable's motor.
+  function rampTrack(a0, w0, full) {
+    const d = w0 - full;
+    const smooth = S.smooth && Math.abs(d) > 0.5;
+    const dur = smooth ? Math.log(Math.abs(d) / 0.5) / SPIN_K : 0;
+    return {
+      kind: "ramp",
+      dur,
+      full,
+      f: (t) => (smooth ? [a0 + full * t + (d * (1 - Math.exp(-SPIN_K * t))) / SPIN_K, full + d * Math.exp(-SPIN_K * t)] : [a0 + full * t, full]),
+    };
+  }
+  // Gliding home to 0°: a cubic Hermite curve, leaving at the current speed and landing with none.
+  function homeTrack(p0, v0, p1, dur) {
+    return {
+      kind: "home",
+      dur,
+      f: (t) => {
+        const u = Math.min(Math.max(t / dur, 0), 1);
+        const u2 = u * u;
+        const u3 = u2 * u;
+        const a = (2 * u3 - 3 * u2 + 1) * p0 + (u3 - 2 * u2 + u) * (v0 * dur) + (-2 * u3 + 3 * u2) * p1;
+        const w = ((6 * u * (u - 1)) * p0 + (3 * u2 - 4 * u + 1) * (v0 * dur) + (-6 * u * (u - 1)) * p1) / dur;
+        return [a, u >= 1 ? 0 : w];
+      },
+    };
+  }
+  // Coasting to a stop where it is: the motor's friction, speed falling as (1 - t)^2.
+  function coastTrack(a0, v0, dur) {
+    return {
+      kind: "coast",
+      dur,
+      f: (t) => {
+        const u = Math.min(Math.max(t / dur, 0), 1);
+        return [a0 + (v0 * dur * (1 - Math.pow(1 - u, 3))) / 3, v0 * (1 - u) * (1 - u)];
+      },
+    };
+  }
+
+  const timelineNow = () => (document.timeline && document.timeline.currentTime) || performance.now();
+  // Seconds into the cover's current curve.
+  function trackT(s) {
+    const st = s.anim && s.anim.startTime;
+    return st === null || st === undefined ? 0 : Math.max(0, (timelineNow() - st) / 1000);
+  }
+
+  // Bring s.angle / s.omega up to date from the compositor's curve.
+  function spinSync(el, s) {
+    if (!s.anim || !s.track) return;
+    let t = trackT(s);
+    if (s.track.kind !== "ramp" && s.track.kind !== "steady") t = Math.min(t, s.track.dur);
+    const [a, w] = s.track.f(t);
+    s.angle = ((a % 360) + 360) % 360;
+    s.omega = w;
+  }
+
+  // Hand the cover back to the script (for scratching, or to rest).
+  function spinToScript(el, s) {
+    spinSync(el, s);
+    if (s.anim) {
+      try {
+        s.anim.cancel();
+      } catch (e) {}
+    }
+    s.anim = null;
+    s.track = null;
+    el.style.removeProperty("rotate");
+    s.lastTf = "";
+    applyAngle(el, s);
+  }
+
+  // Play a curve on the compositor, starting now, from where the cover is.
+  function spinPlay(el, s, track) {
+    const now = timelineNow();
+    const old = s.anim;
+    const dir = Math.sign(track.full || 0) || S.dir || 1;
+    let anim;
+    if (track.kind === "steady") {
+      // One turn, over and over, at full speed.
+      const a0 = ((track.a0 % 360) + 360) % 360;
+      anim = el.animate([{ rotate: `${a0.toFixed(3)}deg` }, { rotate: `${(a0 + 360 * dir).toFixed(3)}deg` }], {
+        duration: (360 / Math.abs(track.full)) * 1000,
+        iterations: Infinity,
+      });
+    } else {
+      const n = Math.max(2, Math.ceil(track.dur * SPIN_KEYS_PER_S) + 1);
+      const tail = track.kind === "ramp" ? SPIN_TAIL_S : 0;
+      const total = track.dur + tail;
+      const keys = [];
+      for (let i = 0; i < n; i++) {
+        const t = (track.dur * i) / (n - 1);
+        keys.push({ offset: total > 0 ? t / total : i / (n - 1), rotate: `${track.f(t)[0].toFixed(3)}deg` });
+      }
+      if (tail) keys.push({ offset: 1, rotate: `${track.f(total)[0].toFixed(3)}deg` });
+      anim = el.animate(keys, { duration: Math.max(1, total * 1000), fill: "forwards" });
+    }
+    // Start it exactly now (not on a later frame), so a switch-over has no gap.
+    try {
+      anim.startTime = now;
+    } catch (e) {}
+    if (old) {
+      try {
+        old.cancel();
+      } catch (e) {}
+    }
+    // Where it is, should a frame be drawn before the compositor picks the new curve up.
+    el.style.rotate = `${track.f(0)[0].toFixed(3)}deg`;
+    s.anim = anim;
+    s.track = track;
+    applyAngle(el, s);
+  }
+
+  // Bring the cover up to (or to a new) full speed from where it is.
+  function spinRun(el, s) {
+    if (!CSS_SPIN) return;
+    spinSync(el, s);
+    const full = fullSpeed();
+    const tr = rampTrack(s.angle || 0, s.omega || 0, full);
+    if (tr.dur <= 0) return spinSteady(el, s, s.angle || 0);
+    spinPlay(el, s, tr);
+    live.add(el);
+    kick();
+  }
+
+  function spinSteady(el, s, a0) {
+    const full = fullSpeed();
+    s.omega = full;
+    spinPlay(el, s, { kind: "steady", dur: Infinity, full, a0, f: (t) => [a0 + full * t, full] });
+  }
+
+  // A speed, direction or wobble change from the menu: run up (or down) to the new speed,
+  // and let the frame loop ease the wobble to its new size.
+  function spinRetarget() {
+    running.forEach((el) => {
+      const s = states.get(el);
+      if (s && s.mode === "run" && el.isConnected) {
+        if (CSS_SPIN) spinRun(el, s);
+        live.add(el);
+      }
+    });
+    kick();
+  }
+
   function settleIdle(el, s, atHome) {
+    if (s.anim) {
+      spinSync(el, s);
+      try {
+        s.anim.cancel();
+      } catch (e) {}
+      s.anim = null;
+      s.track = null;
+      el.style.removeProperty("rotate");
+    }
     s.mode = "idle";
     s.omega = 0;
     s.wob = 0;
+    s.lastTf = "";
     el.classList.remove("disc-live");
     if (atHome) {
       s.angle = 0;
@@ -985,82 +1125,86 @@
     if (isHeader(el) && lastPtr) setTimeout(() => lastPtr && tiltPointer(lastPtr.x, lastPtr.y, lastPtr.target), 0);
   }
 
-  function step(el, s, dt, now) {
-    // Press-down spring: the record sinks a little while held and springs back
-    // with a small overshoot on release. Mirrored records follow the same state.
+  // The press-down spring: the record sinks a little while held and springs back with a
+  // small overshoot on release. Returns whether it is still moving.
+  function pressStep(s, dt) {
     const pressTarget = s.mode === "scratch" && S.fx ? PRESS_SCALE : 1;
     if (s.scale === undefined) {
       s.scale = 1;
       s.scaleV = 0;
     }
-    let pressMoving = false;
-    if (s.scale !== pressTarget || s.scaleV !== 0) {
-      const acc = -320 * (s.scale - pressTarget) - 22 * s.scaleV;
-      s.scaleV += acc * dt;
-      s.scale += s.scaleV * dt;
-      if (Math.abs(s.scale - pressTarget) < 0.0004 && Math.abs(s.scaleV) < 0.01) {
-        s.scale = pressTarget;
-        s.scaleV = 0;
-      }
-      pressMoving = true;
+    if (s.scale === pressTarget && s.scaleV === 0) return false;
+    const acc = -320 * (s.scale - pressTarget) - 22 * s.scaleV;
+    s.scaleV += acc * dt;
+    s.scale += s.scaleV * dt;
+    if (Math.abs(s.scale - pressTarget) < 0.0004 && Math.abs(s.scaleV) < 0.01) {
+      s.scale = pressTarget;
+      s.scaleV = 0;
     }
+    return true;
+  }
+
+  // One frame of script work for a cover. Returns whether it still needs frames.
+  function step(el, s, dt, now) {
+    const pressMoving = pressStep(s, dt);
 
     if (s.mode === "scratch") {
       // Direct user mouse control - rotation handled in mousemove
       if (pressMoving) applyAngle(el, s);
-      return;
+      return true;
     }
 
-    const full = fullSpeed();
+    if (s.anim && s.track) {
+      // On the compositor: follow the curve's speed for the wobble, and switch over when it ends.
+      const t = trackT(s);
+      const tr = s.track;
+      const [, w] = tr.f(tr.kind === "ramp" || tr.kind === "steady" ? t : Math.min(t, tr.dur));
+      s.omega = w;
+      if (tr.kind === "ramp" && t >= tr.dur) {
+        const a = tr.f(t)[0];
+        spinSteady(el, s, a);
+      } else if ((tr.kind === "home" || tr.kind === "coast") && t >= tr.dur) {
+        spinSync(el, s);
+        settleIdle(el, s, tr.kind === "home");
+        return false;
+      }
+      applyAngle(el, s);
+      // A steady spin needs no script at all, once the wobble and the press have settled.
+      const wobSettled = Math.abs((s.wob || 0) - wobAt(s.omega)) < 0.003;
+      return !(s.track && s.track.kind === "steady" && wobSettled && !pressMoving && !tiltOn(el));
+    }
 
+    // Without compositor animations (an older engine): the script turns it, frame by frame.
+    const full = fullSpeed();
     if (s.mode === "run") {
       if (!S.smooth) {
         s.omega = full;
       } else {
-        // Organic turntable torque curve: critically-damped exponential approach
-        const k = 3.2;
-        s.omega = full + (s.omega - full) * Math.exp(-k * dt);
+        s.omega = full + (s.omega - full) * Math.exp(-SPIN_K * dt);
         if (Math.abs(s.omega - full) < 0.4) s.omega = full;
       }
       s.angle = (s.angle + s.omega * dt) % 360;
       applyAngle(el, s);
     } else if (s.mode === "home") {
-      // Cubic Hermite Spline: zero jerk, exact boundary slopes, feathered landing on 0°
-      const elapsed = (now - s.glideStart) / 1000;
-      const tau = Math.min(Math.max(elapsed / s.glideDuration, 0), 1);
-
-      const t2 = tau * tau;
-      const t3 = t2 * tau;
-      const h00 = 2 * t3 - 3 * t2 + 1;
-      const h10 = t3 - 2 * t2 + tau;
-      const h01 = -2 * t3 + 3 * t2;
-
-      s.angle = h00 * s.glideP0 + h10 * (s.glideV0 * s.glideDuration) + h01 * s.glideP1;
-
-      // Continuously update instantaneous omega so unpausing mid-glide is physically seamless
-      const d_h00 = 6 * tau * (tau - 1);
-      const d_h10 = 3 * t2 - 4 * tau + 1;
-      const d_h01 = -6 * tau * (tau - 1);
-      s.omega = (d_h00 * s.glideP0 + d_h10 * (s.glideV0 * s.glideDuration) + d_h01 * s.glideP1) / s.glideDuration;
-
+      const [a, w] = homeTrack(s.glideP0, s.glideV0, s.glideP1, s.glideDuration).f((now - s.glideStart) / 1000);
+      s.angle = a;
+      s.omega = w;
       applyAngle(el, s);
-
-      if (tau >= 1) {
-        return settleIdle(el, s, true);
+      if ((now - s.glideStart) / 1000 >= s.glideDuration) {
+        settleIdle(el, s, true);
+        return false;
       }
     } else if (s.mode === "coast") {
-      // Natural motor friction glide to zero
-      const elapsed = (now - s.glideStart) / 1000;
-      const tau = Math.min(Math.max(elapsed / s.glideDuration, 0), 1);
-      const decay = (1 - tau) * (1 - tau);
-      s.omega = s.glideV0 * decay;
-      s.angle = (s.angle + s.omega * dt) % 360;
+      const [a, w] = coastTrack(s.glideP0, s.glideV0, s.glideDuration).f((now - s.glideStart) / 1000);
+      s.angle = a % 360;
+      s.omega = w;
       applyAngle(el, s);
-
-      if (tau >= 1 || Math.abs(s.omega) < 0.5) {
-        return settleIdle(el, s, false);
+      if ((now - s.glideStart) / 1000 >= s.glideDuration || Math.abs(s.omega) < 0.5) {
+        settleIdle(el, s, false);
+        return false;
       }
     }
+    return s.mode !== "idle";
   }
 
   function frame(t) {
@@ -1073,9 +1217,8 @@
         live.delete(el);
         return;
       }
-      step(el, s, dt, t);
-      if (s.mode === "idle") live.delete(el);
-      else active = true;
+      if (step(el, s, dt, t) && s.mode !== "idle") active = true;
+      else live.delete(el);
     });
     raf = active ? requestAnimationFrame(frame) : 0;
   }
@@ -1099,6 +1242,8 @@
         glideP0: 0,
         glideP1: 0,
         glideV0: 0,
+        anim: null,
+        track: null,
       };
       states.set(el, s);
     }
@@ -1106,6 +1251,8 @@
     s.mode = "run";
     el.classList.add("disc-round", "disc-live");
     running.add(el);
+    // From rest, or picking up mid-glide with the speed it still has.
+    if (CSS_SPIN) spinRun(el, s);
     live.add(el);
     kick();
     // A lifted CD drops back onto its platform the moment it starts to spin.
@@ -1116,6 +1263,7 @@
     const s = states.get(el);
     running.delete(el);
     if (!s || s.mode === "idle" || s.mode === "scratch") return;
+    spinSync(el, s);
 
     const now = performance.now();
     s.glideStart = now;
@@ -1140,9 +1288,11 @@
         s.glideDuration = Math.max(0.9, Math.min(2.4, (1.8 * (target - s.angle)) / (s.omega || 1)));
       }
       s.mode = "home";
+      if (CSS_SPIN) spinPlay(el, s, homeTrack(s.glideP0, s.glideV0, s.glideP1, s.glideDuration));
     } else {
       s.glideDuration = Math.max(0.8, Math.min(2.0, Math.abs(s.omega) / 100));
       s.mode = "coast";
+      if (CSS_SPIN) spinPlay(el, s, coastTrack(s.glideP0, s.glideV0, s.glideDuration));
     }
     live.add(el);
     kick();
@@ -1290,13 +1440,18 @@
         recentVelocities: [],
       };
 
+      // Taken over by the hand: the script turns it from here, starting exactly where the compositor had it.
+      spinToScript(targetEl, s);
       s.mode = "scratch";
+      live.add(targetEl);
+      kick();
 
       // Put all other running vinyl elements (e.g. rotating sidebar record) into scratch sync
       running.forEach((otherEl) => {
         if (otherEl !== targetEl && otherEl.isConnected) {
           const sOther = states.get(otherEl);
           if (sOther) {
+            spinToScript(otherEl, sOther);
             sOther.mode = "scratch";
             sOther.angle = s.angle;
             applyAngle(otherEl, sOther);
@@ -1394,8 +1549,11 @@
           // which used to leave it stuck (and its animation loop running) if playback had stopped.
           sR.mode = "run";
           if (!playing) stop(rEl);
+          else spinRun(rEl, sR); // back up to speed from the speed the hand let go at
+          live.add(rEl); // (the press springs back)
         }
       });
+      kick();
 
       activeScratch = null;
     },
@@ -1458,8 +1616,11 @@
         if (sR) {
           sR.mode = "run";
           if (!playing) stop(rEl);
+          else spinRun(rEl, sR);
+          live.add(rEl);
         }
       });
+      kick();
       activeScratch = null;
     }
   });
@@ -3040,7 +3201,7 @@
   Spicetify.Player.addEventListener("onplaypause", () => setTimeout(casePlay, 30));
 
   // ------------------------------ inspect case ------------------------------
-  // "Inspect Case", a glass pill above the owner's name, picks the shut case up off the
+  // "Inspect", a star above the owner's name, picks the shut case up off the
   // page and turns it over in the light, the way you'd look a jewel case over in your
   // hand: lifted toward you, turned to show the groove side and then the spine, tipped
   // to look along its bottom edge, and set back down. Its walls show as it turns. It
@@ -3058,8 +3219,6 @@
     [0.85, -5, -5, -0.4, 1.035, -3],
     [1, 0, 0, 0, 1, 0],
   ];
-  const INSPECT_ICON =
-    '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6"/><path d="M10.2 10.2 14 14"/></svg>';
   const insp = { btn: null, on: false, t0: 0, raf: 0, queued: false, tint: "" };
 
   // The pose at time t: a clamped cubic spline through the keys. Its speed and its
@@ -3237,9 +3396,10 @@
       b = document.createElement("button");
       b.type = "button";
       b.className = "cdfy-inspect";
-      b.innerHTML = INSPECT_ICON + "<span>Inspect</span>";
+      b.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.85 5.78 6.38.93-4.62 4.5 1.09 6.35L12 17.36l-5.7 3 1.09-6.35-4.62-4.5 6.38-.93z"/></svg>';
       b.setAttribute("aria-label", "Inspect the CD case");
-      b.title = "Pick the case up and look it over";
+      b.title = "Inspect the case";
       b.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -3568,6 +3728,7 @@
     S.rpm = v;
     save();
     refreshMenu();
+    spinRetarget();
     if (announce) toast(`cd-fy : ${fmtRpm(S.rpm)} rpm`);
   }
 
@@ -3600,6 +3761,7 @@
     tick(true);
     if (key === "tilt" || key === "enabled") tiltSettle();
     if ((key === "wave" || key === "enabled") && !S[key]) waveEnd();
+    if (key === "wobble" || key === "smooth") spinRetarget();
     const label = TOAST_NAMES[key] || key;
     if (key === "enabled") {
       toast(`cd-fy : ${S.enabled ? "enabled" : "disabled"}`);
@@ -3624,6 +3786,7 @@
           S.dir = -S.dir;
           save();
           refreshMenu();
+          spinRetarget();
           toast(`cd-fy : direction ${S.dir > 0 ? "clockwise" : "counter-clockwise"}`);
         }),
         mk("smooth",        () => toggle("smooth")),
